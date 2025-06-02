@@ -71,6 +71,7 @@
           <p><strong>Casket ID:</strong> {{ selectedReservation.casket_id }}</p>
           <p><strong>Chapel ID:</strong> {{ selectedReservation.chapel_id }}</p>
           <p><strong>Color:</strong> {{ selectedReservation.color }}</p>
+          <p><strong>Size:</strong> {{ selectedReservation.size }}</p>
           <p>
             <strong>Additional Features:</strong>
             {{ selectedReservation.additional_features }}

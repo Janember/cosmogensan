@@ -284,13 +284,15 @@
               <strong>Selected:</strong> {{ tempCasket.chapelSelect.name }}
             </div>
           </v-col>
-          <v-col cols="12" sm="6">
+          <v-col cols="12" sm="4">
             <v-select
               v-model="tempCasket.color"
               :items="colors"
               item-title="name"
+              item-value="color"
               label="Select a Color"
-              required
+              return-object
+              persistent-hint
             >
               <template #selection="{ item }">
                 <v-icon
@@ -301,9 +303,17 @@
                 </v-icon>
                 {{ item.raw.name }}
               </template>
+              <template #append-item>
+                <v-divider class="my-2"></v-divider>
+                <v-list-item
+                  @click="colorDialog = true"
+                  prepend-icon="mdi-plus"
+                  title="Custom Color"
+                ></v-list-item>
+              </template>
             </v-select>
           </v-col>
-          <v-col cols="12" sm="6">
+          <v-col cols="12" sm="4">
             <v-autocomplete
               v-model="tempCasket.addOns"
               :items="addOns"
@@ -312,7 +322,14 @@
               chips
             ></v-autocomplete>
           </v-col>
-          <v-col cols="12" class="d-flex justify-center">
+          <v-col cols="12" sm="4">
+            <v-select
+              v-model="tempCasket.size"
+              :items="casketSizes"
+              label="Casket Size"
+            ></v-select>
+          </v-col>
+          <!-- <v-col cols="12" class="d-flex justify-center">
             <v-img
               v-if="tempCasket.color"
               :src="getColorImage(tempCasket.color)"
@@ -322,9 +339,9 @@
               class="rounded-t border cursor-pointer"
               style="border: 1px solid #ccc"
               @click="state.imageDialog = true"
-            ></v-img>
+            ></v-img> -->
             <!-- Dialog for Image Click-->
-            <v-dialog v-model="state.imageDialog" max-width="600">
+            <!-- <v-dialog v-model="state.imageDialog" max-width="600">
               <v-card>
                 <v-img
                   :src="getColorImage(tempCasket.color)"
@@ -333,7 +350,7 @@
                 ></v-img>
               </v-card>
             </v-dialog>
-          </v-col>
+          </v-col> -->
           <v-col cols="12">
             <v-textarea
               v-model="tempCasket.additionalInstructions"
@@ -359,6 +376,32 @@
         <v-spacer></v-spacer>
         <v-btn variant="plain" @click="customizeDialog = false">Cancel</v-btn>
         <v-btn color="primary" variant="tonal" @click="saveCasket">Save</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <!-- Dialog for Color Selection -->
+  <v-dialog v-model="colorDialog" max-width="400px">
+    <v-card>
+      <v-card-title>Select or Enter Custom Color</v-card-title>
+      <v-card-text>
+        <v-color-picker
+          v-model="state.customColor"
+          hide-mode-switch
+          show-swatches
+        ></v-color-picker>
+
+        <v-text-field
+          v-model="state.customColor"
+          label="Hex Code (e.g. #FF0000)"
+          prepend-inner-icon="mdi-pound"
+          class="mt-4"
+        ></v-text-field>
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn text @click="colorDialog = false">Cancel</v-btn>
+        <v-btn color="primary" @click="selectCustomColor">Select</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -527,6 +570,7 @@ const addressError = ref("");
 
 const customizeDialog = ref(false);
 const chapelDialog = ref(false);
+const colorDialog = ref(false);
 const retrievalAddressDialog = ref(false);
 
 const casketKinds = ref([]);
@@ -603,6 +647,14 @@ const fetchChapelsByCasketType = async (casketType) => {
     console.error("Fetch error:", err);
   }
 };
+
+const selectCustomColor = () => {
+  tempCasket.color = {
+    name: state.customColor,
+    color: state.customColor
+  }
+  colorDialog.value = false
+}
 
 const fetchCasketPrice = async () => {
   try {
@@ -702,6 +754,7 @@ const tempCasket = reactive({
   handles: "",
   engraving: "",
   addOns: [],
+  size: "",
 });
 
 const state = reactive({
@@ -723,6 +776,8 @@ const state = reactive({
   successDialog: false,
   casketID: "",
   chapelID: "",
+  customColor: "",
+  colorDialog: false,
 });
 
 const fetchCasketID = async () => {
@@ -767,6 +822,12 @@ const fetchChapelID = async () => {
   }
 };
 
+const casketSizes = [
+  "Small",
+  "Medium",
+  "Large"
+];
+
 const addOns = [
   "Memory Drawer",
   "Rosary Holder",
@@ -784,12 +845,12 @@ const getChapelImage = (imageName) => {
   return new URL(`../../../assets/chapels/${imageName}`, import.meta.url).href;
 };
 
-const getColorImage = (imageName) => {
+/* const getColorImage = (imageName) => {
   return new URL(
     `../../../assets/caskets/${imageName}_Casket.jpg`,
     import.meta.url
   ).href;
-};
+}; */
 
 function selectChapel(chapel) {
   tempCasket.chapelSelect = chapel;
@@ -872,8 +933,9 @@ async function submitForm() {
     endDate: state.reservationEnd,
     casketID: state.casketID,
     chapelID: state.chapelID,
-    color: tempCasket.color,
+    color: tempCasket.color.name,
     additionalFeatures: tempCasket.addOns,
+    customColor: tempCasket.customColor,
     instructions: tempCasket.additionalInstructions,
     city: tempAddress.city,
     barangay: tempAddress.barangay,
@@ -883,7 +945,8 @@ async function submitForm() {
     email: state.email,
     phone: state.phone,
     idUploaded: state.discountIdFile,
-    price: Number(state.casketPrice) + Number(state.addressPrice)
+    price: Number(state.casketPrice) + Number(state.addressPrice),
+    size: tempCasket.size,
   });
 
   for (const key in form) {
