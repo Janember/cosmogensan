@@ -30,6 +30,14 @@
           exact
           router
         ></v-list-item>
+        <v-list-item
+          to="/Admin/Chapels"
+          prepend-icon="mdi-church-outline"
+          title="Manage Chapels"
+          value="chapels"
+          exact
+          router
+        ></v-list-item>
       </v-list>
       
 

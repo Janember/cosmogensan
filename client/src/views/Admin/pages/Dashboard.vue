@@ -1,7 +1,6 @@
 <template>
   <div>
     <h2 class="text-2xl font-semibold mb-4">Admin Dashboard</h2>
-    <p>This is the main page for the Admin.</p>
   </div>
   <v-row>
     <v-col cols="12" md="3">
@@ -54,13 +53,20 @@
     <v-col cols="12" md="3">
       <v-card title="Total Sales/Income" height="250px">
         <div style="padding-left: 10%">
-          {{ totalSales.value }}
+          ₱
+          <span style="color: green; font-weight: bold">
+            {{ totalSales }}
+          </span>
         </div>
       </v-card>
     </v-col>
     <v-col cols="12" md="3">
-      <v-card title="Caskets/Chapels" height="250px">
-        {{ casketChapelCount.value }}
+      <v-card title="Total Caskets" height="250px">
+        <div style="padding-left: 10%">
+          <span style="color: green; font-weight: bold">
+            {{ casketCount }}
+          </span>
+        </div>
       </v-card>
     </v-col>
   </v-row>
@@ -80,7 +86,7 @@ const statusCounts = ref({
   rejected: 0,
 });
 const totalSales = ref(0);
-const casketChapelCount = ref(0);
+const casketCount = ref(0);
 
 const fetchDashboardStats = async () => {
   try {
@@ -91,7 +97,7 @@ const fetchDashboardStats = async () => {
       totalReservations.value = response.data.total_reservations;
       statusCounts.value = response.data.status_counts;
       totalSales.value = response.data.total_sales;
-      casketChapelCount.value = response.data.casket_chapel_count;
+      casketCount.value = response.data.casket_count;
     }
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);

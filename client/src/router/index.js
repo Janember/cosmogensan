@@ -10,9 +10,11 @@ import UserAccount from '../views/User/pages/Account.vue'
 import StaffLayout from '../views/Staff/Layout.vue'
 import StaffDashboard from '../views/Staff/pages/Dashboard.vue'
 import StaffReservations from '../views/Staff/pages/Reservations.vue'
+import StaffChapels from '../views/Staff/pages/Chapels.vue'
 import AdminLayout from '../views/Admin/Layout.vue'
 import AdminDashboard from '../views/Admin/pages/Dashboard.vue'
 import AdminReservations from '../views/Admin/pages/Reservations.vue'
+import AdminChapels from '../views/Admin/pages/Chapels.vue'
 import test from '../views/User/pages/badger.vue'
 
 const routes = [
@@ -49,6 +51,7 @@ const routes = [
     children: [
       { path: 'dashboard', component: StaffDashboard},
       { path: 'reservations', component: StaffReservations},
+      { path: 'chapels', component: StaffChapels},
     ]
   },
   {
@@ -58,6 +61,7 @@ const routes = [
     children: [
       { path: 'dashboard', component: AdminDashboard},
       { path: 'reservations', component: AdminReservations},
+      { path: 'chapels', component: AdminChapels},
     ]
   }
 ]

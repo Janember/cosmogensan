@@ -34,7 +34,7 @@ try {
         'total_reservations' => $totalReservations,
         'status_counts' => $statusCounts,
         'total_sales' => (float) $totalSales,
-        'casket_chapel_count' => $casketCount + $chapelCount,
+        'casket_count' => $casketCount,
     ]);
 } catch (Exception $e) {
     echo json_encode(['success' => false, 'message' => $e->getMessage()]);

@@ -30,6 +30,14 @@
           exact
           router
         ></v-list-item>
+        <v-list-item
+          to="/Staff/Chapels"
+          prepend-icon="mdi-church-outline"
+          title="Chapel Status"
+          value="chapels"
+          exact
+          router
+        ></v-list-item>
       </v-list>
 
       <!-- Spacer and Logout Button -->
