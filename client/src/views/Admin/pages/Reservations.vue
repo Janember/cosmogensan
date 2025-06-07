@@ -11,6 +11,13 @@
         item-value="id"
         class="elevation-1"
       >
+        <template v-slot:item.id="{ item }">
+          <td>
+            <a href="#" @click.prevent="showReservationDetails(item)">{{
+              item.id
+            }}</a>
+          </td>
+        </template>
         <!-- Format Status -->
         <template v-slot:item.status="{ item }">
           <td :class="getStatusClass(item.status)">{{ item.status }}</td>
@@ -38,6 +45,63 @@
       </v-data-table>
     </v-container>
   </div>
+  <v-dialog v-model="detailsDialog" max-width="700px">
+    <v-card>
+      <v-card-title class="text-h6 font-weight-bold"
+        >Reservation Details</v-card-title
+      >
+      <v-card-text>
+        <div v-if="selectedReservation">
+          <h4 class="font-semibold mb-2">Details:</h4>
+          <p><strong>ID:</strong> {{ selectedReservation.id }}</p>
+          <p>
+            <strong>Deceased Name:</strong>
+            {{ selectedReservation.deceased_name }}
+          </p>
+          <p>
+            <strong>Start Date:</strong>
+            {{ formatDate(selectedReservation.start_date) }}
+          </p>
+          <p>
+            <strong>End Date:</strong>
+            {{ formatDate(selectedReservation.end_date) }}
+          </p>
+          <p><strong>Casket ID:</strong> {{ selectedReservation.casket_id }}</p>
+          <p><strong>Chapel ID:</strong> {{ selectedReservation.chapel_id }}</p>
+          <p><strong>Color:</strong> {{ selectedReservation.color }}</p>
+          <p><strong>Size:</strong> {{ selectedReservation.size }}</p>
+          <p>
+            <strong>Additional Features:</strong>
+            {{ selectedReservation.additional_features }}
+          </p>
+          <p>
+            <strong>Instructions:</strong>
+            {{ selectedReservation.additional_instructions }}
+          </p>
+
+          <h4 class="font-semibold mt-4 mb-2">
+            Retrieval Address and Contact Info:
+          </h4>
+          <p><strong>City:</strong> {{ selectedReservation.city }}</p>
+          <p><strong>Barangay:</strong> {{ selectedReservation.barangay }}</p>
+          <p><strong>Street:</strong> {{ selectedReservation.street }}</p>
+          <p><strong>House No.:</strong> {{ selectedReservation.house_no }}</p>
+          <p><strong>User Name:</strong> {{ selectedReservation.user_name }}</p>
+          <p><strong>Email:</strong> {{ selectedReservation.email }}</p>
+          <p><strong>Phone:</strong> {{ selectedReservation.phone }}</p>
+
+          <h4 class="font-semibold mt-4 mb-2">Status:</h4>
+          <p><strong>Price:</strong> ₱{{ selectedReservation.price }}</p>
+          <p><strong>Status:</strong> {{ selectedReservation.status }}</p>
+        </div>
+      </v-card-text>
+
+      <v-card-actions>
+        <v-spacer />
+        <v-btn color="primary" @click="detailsDialog = false">Close</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -53,6 +117,8 @@ const headers = [
 ];
 
 const reservations = ref([]);
+const selectedReservation = ref(null);
+const detailsDialog = ref(false);
 
 const fetchReservations = async () => {
   try {
@@ -75,10 +141,10 @@ onMounted(() => {
 
 const getStatusClass = (status) => {
   return {
-    'green--text': status === 'approved',
-    'blue--text': status === 'confirming payment',
-    'orange--text': status === 'waiting approval',
-    'red--text': status === 'rejected' || status === 'pending'
+    "green--text": status === "approved",
+    "blue--text": status === "confirming payment",
+    "orange--text": status === "waiting approval",
+    "red--text": status === "rejected" || status === "pending",
   };
 };
 
@@ -88,7 +154,7 @@ const proceedToPayment = async (item) => {
       `${import.meta.env.VITE_API_URL}/updateReservationStatus.php`,
       {
         reservation_id: item.id,
-        status: "waiting payment"
+        status: "waiting payment",
       }
     );
     if (response.data.success) {
@@ -105,7 +171,7 @@ const confirmPayment = async (item) => {
       `${import.meta.env.VITE_API_URL}/updateReservationStatus.php`,
       {
         reservation_id: item.id,
-        status: "waiting approval"
+        status: "waiting approval",
       }
     );
     if (response.data.success) {
@@ -114,5 +180,16 @@ const confirmPayment = async (item) => {
   } catch (error) {
     console.error("Confirm payment failed:", error);
   }
+};
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+};
+
+const showReservationDetails = (reservation) => {
+  console.log(reservation)
+  selectedReservation.value = reservation;
+  detailsDialog.value = true;
 };
 </script>
