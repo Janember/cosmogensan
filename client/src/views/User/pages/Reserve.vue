@@ -187,20 +187,16 @@
         <v-col cols="12">
           <h3 class="text-2xl font-semibold">
             Total Price: ₱{{
-              (Number(state.casketPrice) || 0) +
-              (Number(state.addressPrice) || 0)
+              convertToNumber((Number(state.casketSelect?.casketPrice) || 0) + (Number(state.address?.addressPrice) || 0))
             }}
           </h3>
 
           <div v-if="state.casketSelect" class="mt-2 text-caption">
-            <strong>Selected Casket Package: </strong
-            >{{ state.casketSelect.casketType }} - ₱{{ state.casketPrice }}
+            <strong>Selected Casket Package: </strong>{{ state.casketSelect.casketType }} - ₱{{ convertToNumber(state.casketSelect.casketPrice) }}
           </div>
 
           <div v-if="state.address" class="mt-2 text-caption">
-            <strong>Address: </strong>{{ state.address.city }} - ₱{{
-              state.addressPrice
-            }}
+            <strong>Address: </strong>{{ state.address.city }} - ₱{{ convertToNumber(state.address.addressPrice)}}
           </div>
         </v-col>
 
@@ -366,7 +362,7 @@
           <v-divider></v-divider>
           <v-col cols="12">
             <h3 class="text-2xl font-semibold">
-              Casket Package Price: ₱{{ state.casketPrice }}
+              Casket Package Price: ₱{{ convertToNumber(tempCasket.casketPrice) }}
             </h3>
           </v-col>
         </v-row>
@@ -560,6 +556,7 @@ import { required, email, minLength } from "@vuelidate/validators";
 import { useRouter } from 'vue-router';
 import axios from "axios";
 import { VSelect } from "vuetify/components";
+import { convertToNumber } from "../../../composables/globalfuncs";
 
 const router = useRouter()
 
@@ -666,14 +663,14 @@ const fetchCasketPrice = async () => {
     const data = await res.json();
 
     if (data.success) {
-      state.casketPrice = data.price;
+      tempCasket.casketPrice = data.price;
     } else {
       console.error(data.message);
-      state.casketPrice = null;
+      tempCasket.casketPrice = null;
     }
   } catch (err) {
     console.error("Fetch error:", err);
-    state.casketPrice = null;
+    tempCasket.casketPrice = null;
   }
 };
 
@@ -726,14 +723,14 @@ const fetchAddressPrice = async () => {
     const data = await res.json();
 
     if (data.success) {
-      state.addressPrice = data.price;
+      state.address.addressPrice = data.price;
     } else {
       console.error(data.message);
-      state.addressPrice = null;
+      state.address.addressPrice = null;
     }
   } catch (err) {
     console.error("Fetch error:", err);
-    state.addressPrice = null;
+    state.address.addressPrice = null;
   }
 };
 
@@ -742,6 +739,7 @@ const tempAddress = reactive({
   barangay: "",
   street: "",
   houseNo: "",
+  addressPrice: null,
 });
 
 const tempCasket = reactive({
@@ -755,6 +753,7 @@ const tempCasket = reactive({
   engraving: "",
   addOns: [],
   size: "",
+  casketPrice: null,
 });
 
 const state = reactive({
@@ -768,8 +767,6 @@ const state = reactive({
   address: null,
   checkbox: false,
   discountIdFile: null,
-  casketPrice: "",
-  addressPrice: "",
   imageDialog: false,
   submitDialog: false,
   showError: false,
@@ -945,7 +942,7 @@ async function submitForm() {
     email: state.email,
     phone: state.phone,
     idUploaded: state.discountIdFile,
-    price: Number(state.casketPrice) + Number(state.addressPrice),
+    price: Number(state.casketSelect.casketPrice) + Number(state.address.addressPrice),
     size: tempCasket.size,
   });
 

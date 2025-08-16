@@ -91,7 +91,7 @@
           <p><strong>Phone:</strong> {{ selectedReservation.phone }}</p>
 
           <h4 class="font-semibold mt-4 mb-2">Status:</h4>
-          <p><strong>Price:</strong> ₱{{ selectedReservation.price }}</p>
+          <p><strong>Price:</strong> ₱{{ convertToNumber(selectedReservation.price) }}</p>
           <p><strong>Status:</strong> {{ selectedReservation.status }}</p>
         </div>
       </v-card-text>
@@ -107,6 +107,7 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import { convertToNumber } from "../../../composables/globalfuncs";
 
 const headers = [
   { title: "Reservation ID", value: "id" },
