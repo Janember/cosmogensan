@@ -4,68 +4,46 @@
   </div>
   <v-row>
     <v-col cols="12" md="3">
-      <v-card title="Total Reservations" height="250px">
-        <div style="padding-left: 10%">
-          {{ totalReservations }}
+      <v-card height="250px" style="padding: 25px;">
+        <div style="font-size: 40px; font-weight: bold;">
+          {{ convertToNumber(totalReservations) }}
+        </div>
+        <div style="font-size: 18px;">
+          Monthly Reservations
         </div>
       </v-card>
     </v-col>
     <v-col cols="12" md="3">
-      <v-card subtitle="" title="Status" height="250px">
-        <div style="padding-left: 10%">
-          Approved:
-          <span style="color: green; font-weight: bold">{{
-            statusCounts.approved
-          }}</span>
+      <v-card height="250px" style="padding: 25px;">
+        <div style="font-size: 40px; color: orangered; font-weight: bold;">
+          {{ convertToNumber(statusCounts.pending) }}
         </div>
-        <div style="padding-left: 10%">
-          Waiting Approval:
-          <span style="color: yellowgreen; font-weight: bold">{{
-            statusCounts.waiting_approval
-          }}</span>
-        </div>
-        <div style="padding-left: 10%">
-          Confirming Payment:
-          <span style="color: orange; font-weight: bold">{{
-            statusCounts.confirming_payment
-          }}</span>
-        </div>
-        <div style="padding-left: 10%">
-          Waiting Payment:
-          <span style="color: orange; font-weight: bold">{{
-            statusCounts.waiting_payment
-          }}</span>
-        </div>
-        <div style="padding-left: 10%">
-          Pending:
-          <span style="color: orangered; font-weight: bold">{{
-            statusCounts.pending
-          }}</span>
-        </div>
-        <div style="padding-left: 10%">
-          Rejected:
-          <span style="color: red; font-weight: bold">{{
-            statusCounts.rejected
-          }}</span>
+        <div style="font-size: 18px;">
+          Pending Reservations
         </div>
       </v-card>
     </v-col>
     <v-col cols="12" md="3">
-      <v-card title="Total Sales/Income" height="250px">
-        <div style="padding-left: 10%">
-          ₱
-          <span style="color: green; font-weight: bold">
-            {{ totalSales }}
+      <v-card height="250px" style="padding: 25px;">
+        <div>
+          <span style="font-size: 40px; color: green; font-weight: bold;">
+            ₱{{ convertToNumber(totalSales) }}
           </span>
         </div>
+        <div style="font-size: 18px;">
+          Total Monthly Sales
+        </div>
       </v-card>
     </v-col>
     <v-col cols="12" md="3">
-      <v-card title="Total Caskets" height="250px">
-        <div style="padding-left: 10%">
-          <span style="color: green; font-weight: bold">
-            {{ casketCount }}
+      <v-card height="250px" style="padding: 25px;">
+        <div>
+          <span style="font-size:40px; color: green; font-weight: bold;">
+            {{ convertToNumber(casketCount) }}
           </span>
+        </div>
+        <div style="font-size: 18px;">
+          Monthly Casket Count
         </div>
       </v-card>
     </v-col>
@@ -74,6 +52,7 @@
 
 <script setup>
 import { ref, onMounted } from "vue";
+import { convertToNumber } from "../../../composables/globalfuncs";
 import axios from "axios";
 
 const totalReservations = ref(0);
