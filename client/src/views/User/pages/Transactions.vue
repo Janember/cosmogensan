@@ -17,6 +17,9 @@
           }}</a>
         </td>
       </template>
+      <template v-slot:item.price="{ item }">
+        <td>₱ {{ convertToNumber(item.price) }}</td>
+      </template>
       <template v-slot:item.date="{ item }">
         <td>{{ formatDate(item.date) }}</td>
       </template>
@@ -27,37 +30,18 @@
         <td>
           <v-btn
             color="blue"
-            @click="openDialog(item)"
+            @click="processPayment(item)"
             v-if="item.status === 'waiting payment'"
           >
-            Pay Balance
+            <div v-if="loading" class="spinner">
+              <div class="loader"></div>
+            </div>
+            <div v-else>Pay Balance</div>
           </v-btn>
         </td>
       </template>
     </v-data-table>
   </v-container>
-
-  <!-- Dialog for payment and downpayment -->
-  <v-dialog v-model="dialog" max-width="500px">
-    <v-card>
-      <v-card-title class="headline">Make a Downpayment</v-card-title>
-      <v-card-text>
-        <v-form>
-          <v-text-field
-            v-model="gcashNumber"
-            label="Enter your G-Cash number"
-            outlined
-            required
-          ></v-text-field>
-          <p><strong>Downpayment (50%):</strong> ₱{{ downpayment }}</p>
-        </v-form>
-      </v-card-text>
-      <v-card-actions>
-        <v-btn color="green" @click="generateReceipt">Generate Receipt</v-btn>
-        <v-btn color="red" @click="dialog = false">Cancel</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
 
   <!-- Reservation Detail Dialog -->
   <v-dialog v-model="detailsDialog" max-width="700px">
@@ -119,13 +103,10 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
+import { ref, computed, onMounted, onUnmounted } from "vue";
 import axios from "axios";
-import jsPDF from "jspdf";
 import { convertToNumber } from "../../../composables/globalfuncs";
 
-const dialog = ref(false);
-const gcashNumber = ref("");
 const selectedReservation = ref(null);
 const detailsDialog = ref(false);
 const headers = ref([
@@ -135,6 +116,10 @@ const headers = ref([
   { title: "Actions", value: "actions", width: "150px" },
 ]);
 const reservations = ref([]);
+const loading = ref(false);
+const pollingInterval = 5000;
+let reservationId = 0;
+let poller = null;
 
 const fetchReservations = async () => {
   try {
@@ -157,6 +142,11 @@ const fetchReservations = async () => {
 
 onMounted(() => {
   fetchReservations();
+  poller = setInterval(checkPaymentStatus, pollingInterval);
+});
+
+onUnmounted(() => {
+  poller = setInterval(checkPaymentStatus, pollingInterval);
 });
 
 const formatDate = (dateString) => {
@@ -168,58 +158,62 @@ const getStatusClass = (status) => {
   return status === "confirmed" ? "green--text" : "red--text";
 };
 
-const openDialog = (item) => {
-  selectedReservation.value = item;
-  dialog.value = true;
-};
-
-const downpayment = computed(() => {
-  return (selectedReservation.value?.price * 0.5).toFixed(2);
-});
-
-// Generate PDF receipt
-const generateReceipt = async () => {
-  if (!gcashNumber.value) {
-    alert("Please enter your G-Cash number.");
-    return;
-  }
-
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text("Reservation Downpayment Receipt", 20, 20);
-  doc.text(`Reservation ID: ${selectedReservation.value.id}`, 20, 30);
-  doc.text(`Price: ₱${selectedReservation.value.price}`, 20, 40);
-  doc.text(`Downpayment (50%): ₱${downpayment.value}`, 20, 50);
-  doc.text(`G-Cash Number: ${gcashNumber.value}`, 20, 60);
-  doc.text(`Date: ${new Date().toLocaleDateString()}`, 20, 70);
-
-  doc.save(`Receipt_${selectedReservation.value.id}.pdf`);
-  try {
-    const response = await axios.post(
-      `${import.meta.env.VITE_API_URL}/payBalance.php`,
-      {
-        reservation_id: selectedReservation.value.id,
-        user_id: JSON.parse(localStorage.getItem("user")).id,
-        downpayment: downpayment.value,
-        status: "confirming payment",
-      }
-    );
-    if (response.data.success) {
-      selectedReservation.value.status = "confirming payment";
-    } else {
-      console.error(
-        "Failed to update reservation status:",
-        response.data.message
-      );
-    }
-  } catch (error) {
-    console.error("Error updating reservation status:", error);
-  }
-
-  dialog.value = false;
-};
 const showReservationDetails = (reservation) => {
   selectedReservation.value = reservation;
   detailsDialog.value = true;
 };
+
+const processPayment = async (item) => {
+  reservationId = item.id
+  loading.value = true;
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/createCheckoutSession.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ item })
+    });
+    
+    const data = await res.json();
+    console.log('Payment session created:', data);
+    console.log(data.checkout_url);
+    if (data.checkout_url) {
+      window.open(data.checkout_url, '_blank');
+    }
+  } catch (error) {
+    console.error("Payment Failed:", error);
+  } finally {
+    loading.value = false; 
+  }
+};
+
+const checkPaymentStatus = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/checkPaymentStatus.php?id=${reservationId}`);
+    const data = await res.json();
+
+    if (data.status === 'paid') {
+      clearInterval(poller); 
+      alert('Payment successful! Please refresh the page to update the status.');
+    }
+  } catch (error) {
+    console.error('Error checking payment status:', error);
+  }
+};
 </script>
+
+<style>
+.loader {
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #3498db;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  animation: spin 1s linear infinite;
+  margin-top: 10px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
