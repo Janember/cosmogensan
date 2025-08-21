@@ -11,7 +11,7 @@ if (!$reservationId) {
     exit;
 }
 
-$stmt = $pdo->prepare("SELECT status FROM transactions WHERE reservation_id = ?");
+$stmt = $pdo->prepare("SELECT status FROM transactions WHERE id = ?");
 $stmt->execute([$reservationId]);
 $reservation = $stmt->fetch();
 

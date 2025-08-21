@@ -14,13 +14,27 @@ if (json_last_error() !== JSON_ERROR_NONE) {
 $eventType = $event['data']['attributes']['type'] ?? '';
 
 switch ($eventType) {
-    case 'payment.paid':
+    case 'checkout_session.payment.paid':
         include('../config/db_connect.php');
-        $paymentId = $event['data']['id'];
-        $stmt = $pdo->prepare("UPDATE orders SET status = 'paid' WHERE payment_id = ?");
+        $paymentId = $event['data']['attributes']['data']['id'];
+        $stmt = $pdo->prepare("UPDATE transactions SET status = 'paid' WHERE id = ?");
         $stmt->execute([$paymentId]);
+        
+        $stmt = $pdo->prepare("SELECT user_id FROM transactions WHERE id = ?");
+        $stmt->execute([$paymentId]);
+        $user = $stmt->fetch();
 
-        error_log("✅ Payment successful: " . $event['data']['id']);
+        if ($user) {
+            $userId = $user['user_id'];
+
+            // 3. Update reservations for that user
+            $stmt = $pdo->prepare("UPDATE reservations SET status = 'confirming payment' WHERE user_id = ?");
+            $stmt->execute([$userId]);
+
+            error_log("✅ Payment successful. Transaction: $paymentId | User: $userId | Reservations updated.");
+        } else {
+            error_log("⚠️ Payment successful ($paymentId), but no user found.");
+        }
         break;
 
     case 'payment.failed':

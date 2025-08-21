@@ -118,7 +118,7 @@ const headers = ref([
 const reservations = ref([]);
 const loading = ref(false);
 const pollingInterval = 5000;
-let reservationId = 0;
+let transactionId = '';
 let poller = null;
 
 const fetchReservations = async () => {
@@ -164,7 +164,7 @@ const showReservationDetails = (reservation) => {
 };
 
 const processPayment = async (item) => {
-  reservationId = item.id
+  
   loading.value = true;
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/createCheckoutSession.php`, {
@@ -174,8 +174,7 @@ const processPayment = async (item) => {
     });
     
     const data = await res.json();
-    console.log('Payment session created:', data);
-    console.log(data.checkout_url);
+    transactionId = data.transaction_id;
     if (data.checkout_url) {
       window.open(data.checkout_url, '_blank');
     }
@@ -188,7 +187,7 @@ const processPayment = async (item) => {
 
 const checkPaymentStatus = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/checkPaymentStatus.php?id=${reservationId}`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/checkPaymentStatus.php?id=${transactionId}`);
     const data = await res.json();
 
     if (data.status === 'paid') {
