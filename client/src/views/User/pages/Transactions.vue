@@ -1,6 +1,6 @@
 <template>
   <div style="margin-bottom: 40px">
-    <h2 class="text-2xl font-semibold mb-4">User Reservations</h2>
+    <h2 class="text-2xl font-semibold mb-4">User Transactions</h2>
     <p>This is the main page for the user.</p>
   </div>
   <v-container>
@@ -15,6 +15,12 @@
           <a href="#" @click.prevent="showReservationDetails(item)">{{
             item.id
           }}</a>
+        </td>
+      </template>
+      <template v-slot:item.transaction_id="{ item }">
+        <td>
+          <span v-if="item.transaction_id">{{ item.transaction_id }}</span>
+          <span v-else class="text-gray-400">—</span>
         </td>
       </template>
       <template v-slot:item.price="{ item }">
@@ -111,6 +117,7 @@ const selectedReservation = ref(null);
 const detailsDialog = ref(false);
 const headers = ref([
   { title: "Reservation ID", align: "start", key: "id", value: "id" },
+  { title: "Transaction ID", value: "transaction_id" },
   { title: "Price", value: "price" },
   { title: "Status", value: "status" },
   { title: "Actions", value: "actions", width: "150px" },
@@ -122,32 +129,23 @@ let transactionId = '';
 let poller = null;
 
 const fetchReservations = async () => {
-  try {
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userID = user.id;
-    const response = await axios.get(
-      `${
-        import.meta.env.VITE_API_URL
-      }/getUserReservations.php?user_id=${userID}`
-    );
-    if (response.data.success) {
+   try {
+     const user = JSON.parse(localStorage.getItem("user"));
+     const userID = user.id;
+     const response = await axios.get(`${ import.meta.env.VITE_API_URL}/getUserTransactions.php?user_id=${userID}` );
+     if (response.data.success) {
       reservations.value = response.data.data;
     } else {
       console.error("Failed to fetch reservations:", response.data.message);
     }
-  } catch (error) {
-    console.error("Error fetching reservations:", error);
-  }
-};
+  } catch (error) { console.error("Error fetching reservations:", error); } };
+
 
 onMounted(() => {
   fetchReservations();
   poller = setInterval(checkPaymentStatus, pollingInterval);
 });
 
-onUnmounted(() => {
-  poller = setInterval(checkPaymentStatus, pollingInterval);
-});
 
 const formatDate = (dateString) => {
   const date = new Date(dateString);
@@ -164,7 +162,6 @@ const showReservationDetails = (reservation) => {
 };
 
 const processPayment = async (item) => {
-  
   loading.value = true;
   try {
     const res = await fetch(`${import.meta.env.VITE_API_URL}/createCheckoutSession.php`, {

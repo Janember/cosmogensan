@@ -30,6 +30,7 @@
               v-if="item.status === 'pending'"
               color="blue"
               @click="proceedToPayment(item)"
+              style="margin: 5px"
             >
               Proceed to Payment
             </v-btn>
@@ -37,8 +38,17 @@
               v-if="item.status === 'confirming payment'"
               color="green"
               @click="confirmPayment(item)"
+              style="margin: 5px"
             >
               Confirm Payment
+            </v-btn>
+            <v-btn 
+              v-if="item.status !== 'rejected' && item.status !== 'approved'"
+              color="red"
+              @click="cancelReservation(item.id)"
+              style="margin: 5px"
+            >
+              Cancel Reservation
             </v-btn>
           </td>
         </template>
@@ -98,7 +108,9 @@
 
       <v-card-actions>
         <v-spacer />
-        <v-btn color="primary" @click="detailsDialog = false">Close</v-btn>
+        <v-btn color="primary" @click="detailsDialog = false">
+          Close
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -163,6 +175,28 @@ const proceedToPayment = async (item) => {
     }
   } catch (error) {
     console.error("Proceed to payment failed:", error);
+  }
+};
+
+const cancelReservation = async (reservationID) => {
+  try {
+    const response = await axios.post(
+      `${import.meta.env.VITE_API_URL}/updateReservationStatus.php`,
+      {
+        reservation_id: reservationID,
+        status: "rejected",
+      }
+    );
+
+    if (response.data.success) {
+      fetchReservations();
+      alert("Reservation canceled successfully.");
+    } else {
+      alert("Failed to cancel reservation.");
+    }
+  } catch (error) {
+    console.error("Error canceling reservation:", error);
+    alert("An error occurred while canceling the reservation.");
   }
 };
 

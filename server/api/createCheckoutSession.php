@@ -23,9 +23,23 @@ $item = $data['item'];
 $amount = intval($item['price'] * 100 * 0.5);
 $name = $item['user_name'];
 
-$client = new \GuzzleHttp\Client();
-
 try {
+    // 🔹 Check if a transaction already exists for this reservation
+    $stmt = $pdo->prepare("SELECT id, checkout_url FROM transactions WHERE reservation_id = ? LIMIT 1");
+    $stmt->execute([$item['id']]);
+    $existingTransaction = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($existingTransaction) {
+        // Return existing transaction without creating a new one
+        echo json_encode([
+            'checkout_url' => $existingTransaction['checkout_url'],
+            'transaction_id' => $existingTransaction['id']
+        ]);
+        exit;
+    }
+
+    // 🔹 If no transaction exists, create a new checkout session
+    $client = new \GuzzleHttp\Client();
     $response = $client->request('POST', 'https://api.paymongo.com/v1/checkout_sessions', [
         'body' => json_encode([
             'data' => [
@@ -62,13 +76,15 @@ try {
     $transactionId = $body['data']['id'] ?? null;
     $checkoutUrl = $body['data']['attributes']['checkout_url'] ?? null;
 
-    if ($transactionId) {
-        $stmt = $pdo->prepare("INSERT INTO transactions (id, reservation_id, user_id, amount, status) VALUES (?, ?, ?, ?, 'unpaid')");
+    if ($transactionId && $checkoutUrl) {
+        $stmt = $pdo->prepare("INSERT INTO transactions (id, reservation_id, user_id, amount, status, checkout_url) 
+                               VALUES (?, ?, ?, ?, 'unpaid', ?)");
         $stmt->execute([
             $transactionId,
             $item['id'],
             $item['user_id'],
-            $amount*0.01
+            $amount * 0.01,
+            $checkoutUrl
         ]);
     }
 

@@ -28,7 +28,7 @@ switch ($eventType) {
             $userId = $user['user_id'];
 
             // 3. Update reservations for that user
-            $stmt = $pdo->prepare("UPDATE reservations SET status = 'confirming payment' WHERE user_id = ?");
+            $stmt = $pdo->prepare("UPDATE reservations SET status = 'approved' WHERE user_id = ?");
             $stmt->execute([$userId]);
 
             error_log("✅ Payment successful. Transaction: $paymentId | User: $userId | Reservations updated.");
