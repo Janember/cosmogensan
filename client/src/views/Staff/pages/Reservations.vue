@@ -104,6 +104,7 @@ import { convertToNumber } from "../../../composables/globalfuncs";
 
 const headers = [
   { title: "Reservation ID", value: "id" },
+  { title: "Name", value: "deceased_name" },
   { title: "User ID", value: "user_id" },
   { title: "Price", value: "price" },
   { title: "Status", value: "status" },

@@ -113,6 +113,7 @@ import { convertToNumber } from "../../../composables/globalfuncs";
 
 const headers = ref([
   { title: "Reservation ID", align: "start", key: "id", value: "id" },
+  { title: "Name", value: "deceased_name" },
   { title: "Start Date", value: "start_date" },
   { title: "End Date", value: "end_date" },
   { title: "Status", value: "status" },

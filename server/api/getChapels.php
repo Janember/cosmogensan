@@ -26,7 +26,7 @@ try {
     $casket_id = $casket['id'];
 
     $stmt = $pdo->prepare("
-        SELECT chapels.name, chapels.image, chapels.status
+        SELECT chapels.name, chapels.image, chapels.status, chapels.id
         FROM chapels
         JOIN casket_chapels ON chapels.id = casket_chapels.chapel_id
         WHERE casket_chapels.casket_id = :casket_id

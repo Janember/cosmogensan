@@ -1,0 +1,4 @@
+button, input, select, textarea {
+  background-color: inherit !important;
+  border-style: inherit !important;
+}

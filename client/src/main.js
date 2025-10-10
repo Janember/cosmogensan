@@ -1,12 +1,18 @@
 import { createApp } from 'vue'
-import App from './App.vue'
-import router from './router'
+import { createVuetify } from 'vuetify'
+import 'vuetify/styles'
 
 import '@fortawesome/fontawesome-free/css/all.css'
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
+import '@google/model-viewer'
+
+import './style.css'
+import './assets/overrides.css'
+
+import App from './App.vue'
+import router from './router'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import  GLTFModel  from 'vue-3d-loader'
 
 const vuetify = createVuetify({
   components,
@@ -16,4 +22,5 @@ const vuetify = createVuetify({
 createApp(App)
   .use(router)
   .use(vuetify)
+  .component('gltf-model', GLTFModel)
   .mount('#app')

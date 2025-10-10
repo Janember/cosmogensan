@@ -56,7 +56,7 @@ try {
                         ]
                     ],
                     'payment_method_types' => ['gcash','card','grab_pay','paymaya'],
-                    'description' => "50% Downpayment for $name",
+                    'description' => "50% Downpayment for chapel and casket reservation",
                     'metadata' => [
                         'reservation_id' => $item['id'],
                         'user_id' => $item['user_id']

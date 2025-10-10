@@ -13,6 +13,7 @@ import StaffReservations from '../views/Staff/pages/Reservations.vue'
 import StaffChapels from '../views/Staff/pages/Chapels.vue'
 import AdminLayout from '../views/Admin/Layout.vue'
 import AdminDashboard from '../views/Admin/pages/Dashboard.vue'
+import AdminReserve from '../views/Admin/pages/Reserve.vue'
 import AdminReservations from '../views/Admin/pages/Reservations.vue'
 import AdminChapels from '../views/Admin/pages/Chapels.vue'
 import test from '../views/User/pages/badger.vue'
@@ -60,6 +61,7 @@ const routes = [
     meta: { requiresAuth: true, role: 2 },
     children: [
       { path: 'dashboard', component: AdminDashboard},
+      { path: 'reserve', component: AdminReserve},
       { path: 'reservations', component: AdminReservations},
       { path: 'chapels', component: AdminChapels},
     ]

@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+* {
+  margin: revert;
+  padding: revert;
+  box-sizing: border-box;
+}

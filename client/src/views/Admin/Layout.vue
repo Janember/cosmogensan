@@ -23,6 +23,14 @@
           router
         ></v-list-item>
         <v-list-item
+          to="/Admin/Reserve"
+          prepend-icon="mdi-church"
+          title="Reserve a Chapel"
+          value="reserve"
+          exact
+          router
+        ></v-list-item>
+        <v-list-item
           to="/Admin/Reservations"
           prepend-icon="mdi-table"
           title="Manage Reservations"
