@@ -4,5 +4,6 @@ client/dist
 server/.env
 server/public
 server/vendor
+.git
 .vscode
 .env
