@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
 header("Access-Control-Allow-Origin: *");
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
@@ -44,7 +46,7 @@ if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 }
 
 try {
-    $stmt = $pdo->prepare("SELECT id, username, email, password, hierarchy FROM users WHERE email = :email LIMIT 1");
+    $stmt = $pdo->prepare("SELECT id, username, email, first_name, last_name, phone_number, address, password, profile_picture, hierarchy FROM users WHERE email = :email LIMIT 1");
     $stmt->execute(['email' => $email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -55,8 +57,12 @@ try {
             "user" => [
                 "id" => $user['id'],
                 "username" => $user['username'],
+                "first_name" => $user['first_name'],
+                "last_name" => $user['last_name'],
+                "phone_number" => $user['phone_number'],
                 "email" => $user['email'],
-                "hierarchy" => $user['hierarchy']
+                "hierarchy" => $user['hierarchy'],
+                "profile_picture" => $user['profile_picture']
             ]
         ];
     } else {

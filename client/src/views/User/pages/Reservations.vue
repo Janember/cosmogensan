@@ -1,109 +1,114 @@
 <template>
-  <div style="margin-bottom: 40px">
-    <h2 class="text-2xl font-semibold mb-4">User Reservations</h2>
-    <p>This is the main page for the user.</p>
-  </div>
-
-  <v-container>
-    <v-data-table
-      :headers="headers"
-      :items="reservations"
-      item-value="name"
-      class="elevation-1"
-    >
-      <template v-slot:item.id="{ item }">
-        <td>
-          <a href="#" @click.prevent="showReservationDetails(item)">{{
-            item.id
-          }}</a>
-        </td>
-      </template>
-
-      <template v-slot:item.start_date="{ item }">
-        <td>{{ formatDate(item.start_date) }}</td>
-      </template>
-
-      <template v-slot:item.end_date="{ item }">
-        <td>{{ formatDate(item.end_date) }}</td>
-      </template>
-      <template v-slot:item.status="{ item }">
-        <td :class="getStatusClass(item.status)">
-          {{ item.status }}
-        </td>
-      </template>
-
-      <template v-slot:item.actions="{ item }">
-        <td>
-          <v-btn
-            color="red"
-            @click="cancelReservation(item.id)"
-            v-if="item.status !== 'rejected' && item.status !== 'approved'"
-          >
-            Cancel Reservation
-          </v-btn>
-        </td>
-      </template>
-    </v-data-table>
-  </v-container>
-
-  <!-- Reservation Detail Dialog -->
-  <v-dialog v-model="detailsDialog" max-width="700px">
-    <v-card>
-      <v-card-title class="text-h6 font-weight-bold"
-        >Reservation Details</v-card-title
+  <div class="!space-y-6">
+    <div>
+      <h1 class="text-3xl font-semibold">Reservations</h1>
+      <p class="text-muted-foreground">
+        Manage all chapel bookings
+      </p>
+    </div>
+    <v-container class="!p-0 mx-auto !shadow-none !bg-card !text-card-foreground !flex flex-col gap-6 !rounded-xl !border">
+      <v-data-table
+        :headers="headers"
+        :items="reservations"
+        item-value="name"
       >
-      <v-card-text>
-        <div v-if="selectedReservation">
-          <h4 class="font-semibold mb-2">Details:</h4>
-          <p><strong>ID:</strong> {{ selectedReservation.id }}</p>
-          <p>
-            <strong>Deceased Name:</strong>
-            {{ selectedReservation.deceased_name }}
-          </p>
-          <p>
-            <strong>Start Date:</strong>
-            {{ formatDate(selectedReservation.start_date) }}
-          </p>
-          <p>
-            <strong>End Date:</strong>
-            {{ formatDate(selectedReservation.end_date) }}
-          </p>
-          <p><strong>Casket ID:</strong> {{ selectedReservation.casket_id }}</p>
-          <p><strong>Chapel ID:</strong> {{ selectedReservation.chapel_id }}</p>
-          <p><strong>Color:</strong> {{ selectedReservation.color }}</p>
-          <p><strong>Size:</strong> {{ selectedReservation.size }}</p>
-          <p>
-            <strong>Additional Features:</strong>
-            {{ selectedReservation.additional_features }}
-          </p>
-          <p>
-            <strong>Instructions:</strong>
-            {{ selectedReservation.additional_instructions }}
-          </p>
+        <template v-slot:item.id="{ item }">
+          <td>
+            <a
+              href="#"
+              @click.prevent="showReservationDetails(item)"
+              class="text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150"
+            >{{
+              item.id
+            }}</a>
+          </td>
+        </template>
 
-          <h4 class="font-semibold mt-4 mb-2">
-            Retrieval Address and Contact Info:
-          </h4>
-          <p><strong>City:</strong> {{ selectedReservation.city }}</p>
-          <p><strong>Barangay:</strong> {{ selectedReservation.barangay }}</p>
-          <p><strong>Street:</strong> {{ selectedReservation.street }}</p>
-          <p><strong>House No.:</strong> {{ selectedReservation.house_no }}</p>
-          <p><strong>User Name:</strong> {{ selectedReservation.user_name }}</p>
-          <p><strong>Email:</strong> {{ selectedReservation.email }}</p>
-          <p><strong>Phone:</strong> {{ selectedReservation.phone }}</p>
+        <template v-slot:item.start_date="{ item }">
+          <td>{{ formatDate(item.start_date) }}</td>
+        </template>
 
-          <h4 class="font-semibold mt-4 mb-2">Status:</h4>
-          <p><strong>Price:</strong> ₱{{ convertToNumber(selectedReservation.price) }}</p>
-          <p><strong>Status:</strong> {{ selectedReservation.status }}</p>
-        </div>
-      </v-card-text>
+        <template v-slot:item.end_date="{ item }">
+          <td>{{ formatDate(item.end_date) }}</td>
+        </template>
+        <template v-slot:item.status="{ item }">
+          <td :class="getStatusClass(item.status)">
+            {{ item.status }}
+          </td>
+        </template>
 
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" @click="detailsDialog = false">Close</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+        <template v-slot:item.actions="{ item }">
+          <td>
+            <v-btn
+              color="red"
+              @click="cancelReservation(item.id)"
+              v-if="item.status !== 'rejected' && item.status !== 'approved'"
+            >
+              Cancel Reservation
+            </v-btn>
+          </td>
+        </template>
+      </v-data-table>
+    </v-container>
+    <!-- Reservation Detail Dialog -->
+    <v-dialog v-model="detailsDialog" max-width="700px">
+      <v-card>
+        <v-card-title class="text-h6 font-weight-bold"
+          >Reservation Details</v-card-title
+        >
+        <v-card-text>
+          <div v-if="selectedReservation">
+            <h4 class="font-semibold mb-2">Details:</h4>
+            <p><strong>ID:</strong> {{ selectedReservation.id }}</p>
+            <p>
+              <strong>Deceased Name:</strong>
+              {{ selectedReservation.deceased_name }}
+            </p>
+            <p>
+              <strong>Start Date:</strong>
+              {{ formatDate(selectedReservation.start_date) }}
+            </p>
+            <p>
+              <strong>End Date:</strong>
+              {{ formatDate(selectedReservation.end_date) }}
+            </p>
+            <p><strong>Casket ID:</strong> {{ selectedReservation.casket_id }}</p>
+            <p><strong>Chapel ID:</strong> {{ selectedReservation.chapel_id }}</p>
+            <p><strong>Color:</strong> {{ selectedReservation.color }}</p>
+            <p><strong>Size:</strong> {{ selectedReservation.size }}</p>
+            <p>
+              <strong>Additional Features:</strong>
+              {{ selectedReservation.additional_features }}
+            </p>
+            <p>
+              <strong>Instructions:</strong>
+              {{ selectedReservation.additional_instructions }}
+            </p>
+
+            <h4 class="font-semibold mt-4 mb-2">
+              Retrieval Address and Contact Info:
+            </h4>
+            <p><strong>City:</strong> {{ selectedReservation.city }}</p>
+            <p><strong>Barangay:</strong> {{ selectedReservation.barangay }}</p>
+            <p><strong>Street:</strong> {{ selectedReservation.street }}</p>
+            <p><strong>House No.:</strong> {{ selectedReservation.house_no }}</p>
+            <p><strong>User Name:</strong> {{ selectedReservation.user_name }}</p>
+            <p><strong>Email:</strong> {{ selectedReservation.email }}</p>
+            <p><strong>Phone:</strong> {{ selectedReservation.phone }}</p>
+
+            <h4 class="font-semibold mt-4 mb-2">Status:</h4>
+            <p><strong>Price:</strong> ₱{{ convertToNumber(selectedReservation.price) }}</p>
+            <p><strong>Status:</strong> {{ selectedReservation.status }}</p>
+          </div>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="detailsDialog = false">Close</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script setup>

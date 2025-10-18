@@ -1,7 +1,9 @@
 <template>
   <div>
-    <h2 class="text-2xl font-semibold mb-4">Chapel Reservation Form</h2>
-    <p>Reserve a peaceful place for remembrance and reflection.</p>
+    <h1 class="text-3xl font-semibold">Reserve Chapel</h1>
+    <p class="text-muted-foreground">
+      Book chapel services for your loved ones
+    </p>
   </div>
   <form @submit.prevent="v$.$validate()">
     <v-container style="max-width: 800px" class="px-4">

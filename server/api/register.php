@@ -19,7 +19,10 @@ $response = ['success' => false];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $input = json_decode(file_get_contents("php://input"), true);
     $username = $input['username'];
+    $first_name = $input['firstname'];
+    $last_name = $input['lastname'];
     $email = trim($input['email'] ?? '');
+    $phone_number = $input['phonenumber'];
     $password = $input['password'] ?? '';
     $confirm_password = $input['confirm_password'] ?? '';
 
@@ -59,8 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
-        $stmt = $pdo->prepare("INSERT INTO users (username, email, password, hierarchy, created_at) VALUES (?, ?, ?, 0, NOW())");
-        $stmt->execute([$username, $email, $hashedPassword]);
+        $stmt = $pdo->prepare("INSERT INTO users (username, first_name, last_name, email, password, hierarchy, phone_number, created_at) VALUES (?, ?, ?, ?, ?, 0, ?, NOW())");
+        $stmt->execute([$username, $first_name, $last_name, $email, $hashedPassword, $phone_number]);
 
         $response['success'] = true;
         $response['message'] = 'Registration successful.';

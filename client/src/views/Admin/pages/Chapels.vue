@@ -1,42 +1,45 @@
 <template>
-  <div>
-    <h2 class="text-2xl font-semibold mb-4">All Reservations</h2>
-    <p>Displays all reservations for the Admin</p>
-  </div>
-  <div>
-    <v-container>
-      <v-data-table
-        :headers="headers"
-        :items="chapels"
-        item-value="id"
-        class="elevation-1"
-      >
-        <!-- Format Status -->
-        <template v-slot:item.status="{ item }">
-          <td :class="getStatusClass(item.status)">{{ item.status }}</td>
-        </template>
+  <div class="!space-y-6">
+    <div>
+      <h1 class="text-3xl font-semibold">Chapels</h1>
+      <p class="text-muted-foreground">
+        Manage all chapel status
+      </p>
+    </div>
+    <div>
+      <v-container class="!p-0 mx-auto !shadow-none !bg-card !text-card-foreground !flex flex-col gap-6 !rounded-xl !border">
+        <v-data-table
+          :headers="headers"
+          :items="chapels"
+          item-value="id"
+        >
+          <!-- Format Status -->
+          <template v-slot:item.status="{ item }">
+            <td :class="getStatusClass(item.status)">{{ item.status }}</td>
+          </template>
 
-        <!-- Actions based on status -->
-        <template v-slot:item.actions="{ item }">
-          <td>
-            <v-btn
-              v-if="item.status === 'available'"
-              color="red"
-              @click="updateChapelStatus(item)"
-            >
-              UPDATE TO "NOT AVAILABLE"
-            </v-btn>
-            <v-btn
-              v-if="item.status === 'not available'"
-              color="blue"
-              @click="updateChapelStatus(item)"
-            >
-              UPDATE TO "AVAILABLE"
-            </v-btn>
-          </td>
-        </template>
-      </v-data-table>
-    </v-container>
+          <!-- Actions based on status -->
+          <template v-slot:item.actions="{ item }">
+            <td>
+              <v-btn
+                v-if="item.status === 'available'"
+                color="red"
+                @click="updateChapelStatus(item)"
+              >
+                UPDATE TO "NOT AVAILABLE"
+              </v-btn>
+              <v-btn
+                v-if="item.status === 'not available'"
+                color="blue"
+                @click="updateChapelStatus(item)"
+              >
+                UPDATE TO "AVAILABLE"
+              </v-btn>
+            </td>
+          </template>
+        </v-data-table>
+      </v-container>
+    </div>
   </div>
 </template>
 

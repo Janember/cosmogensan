@@ -1,23 +1,23 @@
 <template>
   <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center p-4">
     <div class="w-full max-w-md space-y-8">
-      <div class="text-center space-y-6">
+      <div class="text-center space-y-6 mb-8">
         <div class="flex justify-center">
           <img
             src="/cosmopolitanLogo.png"
             alt="Cosmopolitan Memorial Chapels"
-            class="h-20 w-auto"
+            class="h-20 w-auto mb-6"
           />
         </div>
         <div class="space-y-2">
-          <h1 class="text-3xl text-gray-800">Login Portal</h1>
+          <h1 class="text-3xl text-gray-800 mb-2">Login Portal</h1>
           <p class="text-gray-600">
             Cosmopolitan Memorial Chapels Management System
           </p>
         </div>
       </div>
-      <div class="w-full max-w-md bg-white rounded-2xl shadow !p-6">
-        <div class="space-y-1 text-center mb-6">
+      <div class="mb-8 gap-6 w-full max-w-md bg-white rounded-2xl shadow">
+        <div class="space-y-1 text-center px-6 pt-6 mb-7">
           <h2 class="text-2xl font-semibold text-gray-800">Login</h2>
           <p class="text-gray-500 text-sm"></p>
         </div>
@@ -26,15 +26,15 @@
           v-if="route.query.registered === 'true'"
           type="success"
           dense
-          class="mb-4"
+          class="mx-4 mb-4"
         >
           Registration successful! You may now log in.
         </v-alert>
 
 
-        <v-form @submit.prevent="handleLogin">
-          <div class="space-y-2">
-            <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
+        <v-form @submit.prevent="handleLogin" class="px-6">
+          <div class="space-y-2 mb-4">
+            <label for="email" class="bold mb-2 block text-sm font-medium text-gray-700">Email</label>
             <div class="relative">
               <MailIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
@@ -48,12 +48,13 @@
             </div>
           </div>
           
-          <div class="space-y-2">
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+          <div class="space-y-2 mb-4">
+            <label for="password" class="block mb-2 text-sm font-medium text-gray-700">Password</label>
             <div class="relative">
               <LockIcon class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
               <input
                 v-model="password"
+                :type="showPassword ? 'text' : 'password'"
                 label="Password"
                 type="password"
                 placeholder="Enter your password"
@@ -78,18 +79,17 @@
               @error="onError"/>
           </div>
 
-          <div class="flex items-center justify-between text-sm">
+          <div class="flex items-center justify-between text-sm mb-4">
             <label class="flex items-center space-x-2">
-              <input type="checkbox" id="remember" class="rounded border-gray-300" />
+              <input type="checkbox" id="remember" class="mr-2 rounded border-gray-300" />
               <span>Remember me</span>
             </label>
-            <a href="#" class="text-blue-600 hover:underline">Forgot password?</a>
+            <a href="#" class="text-black-600 hover:underline">Forgot password?</a>
           </div>
           
           <button 
             type="submit" 
-            class="w-full bg-blue-600 !important text-white py-2 rounded-lg hover:bg-blue-700 transition"
-            style="background-color: var(--color-blue-600) !important;"
+            class="w-full bg-black !important text-white py-2 rounded-lg hover:bg-blue-700 transition"
           >
             Sign In
           </button>
@@ -99,13 +99,13 @@
           </v-alert>
         </v-form>
 
-        <div class="text-center mt-4">
-          <span>Don't have an account?</span>
-          <v-btn variant="plain" text color="primary" @click="goToRegister">Register</v-btn>
+        <div class="text-center py-4">
+          <span>Don't have an account? </span>
+          <button variant="plain" text class="text-black-600 hover:underline" @click="goToRegister">Register</button>
         </div>
       </div>
       <div class="text-center space-y-4">
-        <div class="text-sm text-gray-500">
+        <div class="text-sm text-gray-500 mb-4">
           <p>Locations: Manila • Cebu • Davao • Tagum • Cagayan • Iloilo</p>
           <p>General Santos • Iligan • Valencia</p>
         </div>
@@ -130,6 +130,7 @@ const password = ref("");
 const error = ref("");
 const hcaptchaToken = ref(null);
 
+const showPassword = ref(false);
 const router = useRouter();
 const route = useRoute();
 
@@ -157,14 +158,22 @@ const handleLogin = async () => {
         id: response.data.user.id,
         username: response.data.user.username,
         email: response.data.user.email,
+        profile_picture: response.data.user.profile_picture,
         hierarchy: response.data.user.hierarchy,
       }));
       
       router.push(`/${getDashboardRoute(response.data.user.hierarchy)}`);
     } else {
       error.value = response.data.message || "Login failed";
+      hcaptchaToken.value = '';
+      if (window.hcaptcha) {
+        window.hcaptcha.reset();
+      } else if (hcaptchaRef.value && typeof hcaptchaRef.value.reset === 'function') {
+        hcaptchaRef.value.reset();
+      }
     }
   } catch (err) {
+    console.log(response.data)
     error.value = "Could not connect to the server";
   }
 };

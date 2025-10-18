@@ -1,74 +1,18 @@
 <template>
   <v-app>
-    <v-navigation-drawer app expand-on-hover rail color="#133256" class="text-white" style="border-color: black; border-right-width: 2px">
-      <!-- User Info -->
-      <v-list>
-        <v-list-item
-          prepend-avatar="https://i.pinimg.com/736x/f1/0f/f7/f10ff70a7155e5ab666bcdd1b45b726d.jpg"
-          :subtitle="email"
-          :title="username"
-        ></v-list-item>
-      </v-list>
-
-      <v-divider></v-divider>
-
-      <!-- Navigation Links -->
-      <v-list density="compact" nav>
-        <v-list-item
-          to="/Admin/Dashboard"
-          prepend-icon="mdi-view-dashboard"
-          title="Dashboard"
-          value="dashboard"
-          exact
-          router
-        ></v-list-item>
-        <v-list-item
-          to="/Admin/Reserve"
-          prepend-icon="mdi-church"
-          title="Reserve a Chapel"
-          value="reserve"
-          exact
-          router
-        ></v-list-item>
-        <v-list-item
-          to="/Admin/Reservations"
-          prepend-icon="mdi-table"
-          title="Manage Reservations"
-          value="reservations"
-          exact
-          router
-        ></v-list-item>
-        <v-list-item
-          to="/Admin/Chapels"
-          prepend-icon="mdi-church-outline"
-          title="Manage Chapels"
-          value="chapels"
-          exact
-          router
-        ></v-list-item>
-      </v-list>
-      
-
-      <!-- Spacer and Logout Button -->
-      <v-divider></v-divider>
-
-      <v-list density="compact" nav>
-        <v-list-item
-          prepend-icon="mdi-logout"
-          title="Logout"
-          @click="handleLogout"
-        ></v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
+    <Sidebar
+      :currentSection="currentSection"
+      :onSectionChange="setCurrentSection"
+      @logout="handleLogout" 
+    />
     <!-- Main Content Area -->
-    <v-main>
+    <v-main class="lg:!pl-80 bg-gray-100">
       <div class="flex-1 ml-64 flex flex-col min-h-screen">
-        <Header />
-        <main class="p-6 flex-grow bg-gray-50" style="padding-left: 5%; padding-right: 5%; min-height: 76dvh">
-          <router-view />
+        <main class="flex-1 overflow-y-auto">
+          <div class="!p-6 bg-gray-100">
+            <router-view />
+          </div>
         </main>
-        <Footer />
       </div>
     </v-main>
   </v-app>
@@ -78,12 +22,14 @@
 <script setup>
 import Header from './components/Header.vue'
 import Footer from '../../components/Footer.vue'
+import Sidebar from './components/Sidebar.vue'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const username = ref('')
 const email = ref('')
+const currentSection = ref('/Admin/dashboard')
 
 onMounted(() => {
   const user = JSON.parse(localStorage.getItem('user'))
@@ -94,6 +40,11 @@ onMounted(() => {
 const handleLogout = () => {
   localStorage.removeItem('user')
   router.push('/login')
+}
+
+const setCurrentSection = (section) => {
+  console.log(section);
+  currentSection.value = section
 }
 
 if (!localStorage.getItem('user')) {

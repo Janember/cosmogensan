@@ -1,19 +1,24 @@
 <template>
-  <div>
-    <h2 class="text-2xl font-semibold mb-4">All Reservations</h2>
-    <p>Displays all reservations for the Admin</p>
-  </div>
-  <div>
-    <v-container>
+  <div class="!space-y-6">
+    <div>
+      <h1 class="text-3xl font-semibold">Reservations</h1>
+      <p class="text-muted-foreground">
+        Manage all chapel bookings
+      </p>
+    </div>
+    <v-container class="!p-0 mx-auto !shadow-none !bg-card !text-card-foreground !flex flex-col gap-6 !rounded-xl !border">
       <v-data-table
         :headers="headers"
         :items="reservations"
         item-value="id"
-        class="elevation-1"
       >
         <template v-slot:item.id="{ item }">
           <td>
-            <a href="#" @click.prevent="showReservationDetails(item)">{{
+            <a
+              href="#"
+              @click.prevent="showReservationDetails(item)"
+              class="text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150"
+            >{{
               item.id
             }}</a>
           </td>
@@ -24,13 +29,13 @@
         </template>
 
         <!-- Actions based on status -->
-        <template v-slot:item.actions="{ item }">
+        <template class="text-right" v-slot:item.actions="{ item }">
           <td>
             <v-btn
               v-if="item.status === 'pending'"
               color="blue"
               @click="proceedToPayment(item)"
-              style="margin: 5px"
+              class="!m-1"
             >
               Proceed to Payment
             </v-btn>
@@ -38,7 +43,7 @@
               v-if="item.status === 'confirming payment'"
               color="green"
               @click="confirmPayment(item)"
-              style="margin: 5px"
+              class="!m-1"
             >
               Confirm Payment
             </v-btn>
@@ -46,7 +51,7 @@
               v-if="item.status !== 'rejected' && item.status !== 'approved'"
               color="red"
               @click="cancelReservation(item.id)"
-              style="margin: 5px"
+              class="!m-1"
             >
               Cancel Reservation
             </v-btn>
@@ -54,66 +59,200 @@
         </template>
       </v-data-table>
     </v-container>
-  </div>
-  <v-dialog v-model="detailsDialog" max-width="700px">
-    <v-card>
-      <v-card-title class="text-h6 font-weight-bold"
-        >Reservation Details</v-card-title
-      >
-      <v-card-text>
-        <div v-if="selectedReservation">
-          <h4 class="font-semibold mb-2">Details:</h4>
-          <p><strong>ID:</strong> {{ selectedReservation.id }}</p>
-          <p>
-            <strong>Deceased Name:</strong>
-            {{ selectedReservation.deceased_name }}
+    <v-dialog v-model="detailsDialog" max-width="512px" >
+      <v-card class="w-full max-w-3xl sm:max-w-lg max-h-[90vh] !p-6 rounded-lg border shadow-lg overflow-y-auto !gap-4">
+        <button
+          @click="detailsDialog = false"
+          class="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+          aria-label="Close dialog"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
+        <div data-slot="dialog-header" class="flex flex-col gap-2 sm:text-left">
+          <h2 id="radix-:r7d:" data-slot="dialog-title" class="text-lg leading-none font-semibold">
+            Reservation Details
+          </h2>
+          <p id="radix-:r7e:" data-slot="dialog-description" class="text-muted-foreground text-sm">
+            View complete information about this reservation
           </p>
-          <p>
-            <strong>Start Date:</strong>
-            {{ formatDate(selectedReservation.start_date) }}
-          </p>
-          <p>
-            <strong>End Date:</strong>
-            {{ formatDate(selectedReservation.end_date) }}
-          </p>
-          <p><strong>Casket ID:</strong> {{ selectedReservation.casket_id }}</p>
-          <p><strong>Chapel ID:</strong> {{ selectedReservation.chapel_id }}</p>
-          <p><strong>Color:</strong> {{ selectedReservation.color }}</p>
-          <p><strong>Size:</strong> {{ selectedReservation.size }}</p>
-          <p>
-            <strong>Additional Features:</strong>
-            {{ selectedReservation.additional_features }}
-          </p>
-          <p>
-            <strong>Instructions:</strong>
-            {{ selectedReservation.additional_instructions }}
-          </p>
-
-          <h4 class="font-semibold mt-4 mb-2">
-            Retrieval Address and Contact Info:
-          </h4>
-          <p><strong>City:</strong> {{ selectedReservation.city }}</p>
-          <p><strong>Barangay:</strong> {{ selectedReservation.barangay }}</p>
-          <p><strong>Street:</strong> {{ selectedReservation.street }}</p>
-          <p><strong>House No.:</strong> {{ selectedReservation.house_no }}</p>
-          <p><strong>User Name:</strong> {{ selectedReservation.user_name }}</p>
-          <p><strong>Email:</strong> {{ selectedReservation.email }}</p>
-          <p><strong>Phone:</strong> {{ selectedReservation.phone }}</p>
-
-          <h4 class="font-semibold mt-4 mb-2">Status:</h4>
-          <p><strong>Price:</strong> ₱{{ convertToNumber(selectedReservation.price) }}</p>
-          <p><strong>Status:</strong> {{ selectedReservation.status }}</p>
         </div>
-      </v-card-text>
-
-      <v-card-actions>
-        <v-spacer />
-        <v-btn color="primary" @click="detailsDialog = false">
-          Close
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+        <div class="space-y-6">
+          <div class="bg-muted/50 rounded-lg !p-4">
+            <h4 class="text-sm text-muted-foreground mb-3">
+              Service Details
+            </h4>
+            <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  Reservation ID
+                </div>
+                <div class="mt-0.5">
+                  {{ selectedReservation.id }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  Deceased Name
+                </div>
+                <div class="mt-0.5">
+                  {{ selectedReservation.deceased_name }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  Start Date
+                </div>
+                <div class="mt-0.5">
+                  {{ formatDate(selectedReservation.start_date) }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  End Date
+                </div>
+                <div class="mt-0.5">
+                  {{ formatDate(selectedReservation.end_date) }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  Chapel ID
+                </div>
+                <div class="mt-0.5">
+                  {{ selectedReservation.chapel_id }}
+                </div>
+              </div>
+              <div>
+                <div class="text-xs text-muted-foreground">
+                  Casket ID
+                </div>
+                <div class="mt-0.5">
+                  {{ selectedReservation.casket_id }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bg-muted/50 rounded-lg !p-4">
+          <h4 class="text-sm text-muted-foreground mb-3">
+            Casket Specifications
+          </h4>
+          <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+            <div>
+              <div class="text-xs text-muted-foreground">
+                Color
+              </div>
+              <div class="mt-0.5 flex items-center gap-2">
+                <div class="w-4 h-4 rounded" :style="{ backgroundColor: selectedReservation.color }"></div>
+                {{ selectedReservation.color }}
+              </div>
+            </div>
+          <div>
+            <div class="text-xs text-muted-foreground">
+              Size
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.size }}
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div class="text-xs text-muted-foreground">
+              Additional Features
+            </div>
+            <div class="mt-1.5 flex flex-wrap gap-1.5">
+              <span
+                v-for="(feature, index) in selectedReservation.additional_features.split(',')"
+                :key="index"
+                class="inline-flex items-center gap-1 rounded-md bg-secondary text-secondary-foreground px-2 py-0.5 text-xs font-medium"
+              >
+                {{ feature.trim() }}
+              </span>
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div class="text-xs text-muted-foreground">
+              Special Instructions
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.additional_instructions }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bg-muted/50 rounded-lg !p-4">
+        <h4 class="text-sm text-muted-foreground mb-3">
+          Retrieval Address &amp; Contact
+        </h4>
+        <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+          <div>
+            <div class="text-xs text-muted-foreground">
+              Contact Person
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.user_name }}
+            </div>
+          </div>
+          <div>
+            <div class="text-xs text-muted-foreground">
+              Phone
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.phone }}
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div class="text-xs text-muted-foreground">
+              Email
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.email }}
+            </div>
+          </div>
+          <div class="col-span-2">
+            <div class="text-xs text-muted-foreground">
+              Address
+            </div>
+            <div class="mt-0.5">
+              {{ selectedReservation.house_no }} {{ selectedReservation.street }}, {{ selectedReservation.barangay }}, {{ selectedReservation.city }}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between bg-muted/50 rounded-lg !p-4">
+        <div>
+          <div class="text-xs text-muted-foreground">
+            Total Price
+          </div>
+          <div class="mt-0.5 text-xl">
+            ₱{{ convertToNumber(selectedReservation.price) }}
+          </div>
+        </div>
+        <div class="text-right">
+          <div class="text-xs text-muted-foreground mb-1.5">
+            Status
+          </div>
+          <span
+            data-slot="badge"
+            class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium w-fit gap-1 transition"
+            :class="selectedReservation.status === 'approved' 
+              ? 'bg-green-600 text-green-50' 
+              : 'bg-blue-600 text-blue-50'"
+          >
+            {{ selectedReservation.status }}
+          </span>
+        </div>
+      </div>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn color="primary" @click="detailsDialog = false">
+            Close
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </div>
 </template>
 
 <script setup>
@@ -121,13 +260,19 @@ import { ref, onMounted } from "vue";
 import axios from "axios";
 import { convertToNumber } from "../../../composables/globalfuncs";
 
+
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+};
+
 const headers = [
   { title: "Reservation ID", value: "id" },
   { title: "Name", value: "deceased_name" },
-  { title: "User ID", value: "user_id" },
-  { title: "Price", value: "price" },
+  { title: "Start Date", value: "start_date" },
+  { title: "End Date", value: "end_date" },
   { title: "Status", value: "status" },
-  { title: "Actions", value: "actions", width: "200px" },
+  { title: "Actions", value: "actions", width: "200px", sortable: false },
 ];
 
 const reservations = ref([]);
@@ -218,13 +363,7 @@ const confirmPayment = async (item) => {
   }
 };
 
-const formatDate = (dateString) => {
-  const date = new Date(dateString);
-  return `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-};
-
 const showReservationDetails = (reservation) => {
-  console.log(reservation)
   selectedReservation.value = reservation;
   detailsDialog.value = true;
 };

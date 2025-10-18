@@ -9,14 +9,18 @@ import UserReserve from '../views/User/pages/Reserve.vue'
 import UserAccount from '../views/User/pages/Account.vue'
 import StaffLayout from '../views/Staff/Layout.vue'
 import StaffDashboard from '../views/Staff/pages/Dashboard.vue'
+import StaffReserve from '../views/Staff/pages/Reserve.vue'
 import StaffReservations from '../views/Staff/pages/Reservations.vue'
 import StaffChapels from '../views/Staff/pages/Chapels.vue'
+import StaffTransactions from '../views/Staff/pages/Transactions.vue'
+import StaffAccount from '../views/Staff/pages/Account.vue'
 import AdminLayout from '../views/Admin/Layout.vue'
 import AdminDashboard from '../views/Admin/pages/Dashboard.vue'
 import AdminReserve from '../views/Admin/pages/Reserve.vue'
 import AdminReservations from '../views/Admin/pages/Reservations.vue'
 import AdminChapels from '../views/Admin/pages/Chapels.vue'
-import test from '../views/User/pages/badger.vue'
+import AdminTransactions from '../views/Admin/pages/Transactions.vue'
+import AdminAccount from '../views/Admin/pages/Account.vue'
 
 const routes = [
   { 
@@ -42,7 +46,6 @@ const routes = [
       { path: 'transactions', component: UserTransactions },
       { path: 'reserve', component: UserReserve },
       { path: 'account', component: UserAccount },
-      { path: 'test', component: test },
     ]
   },
   {
@@ -52,7 +55,10 @@ const routes = [
     children: [
       { path: 'dashboard', component: StaffDashboard},
       { path: 'reservations', component: StaffReservations},
+      { path: 'reserve', component: StaffReserve},
       { path: 'chapels', component: StaffChapels},
+      { path: 'transactions', component: StaffTransactions},
+      { path: 'account', component: StaffAccount}
     ]
   },
   {
@@ -64,6 +70,8 @@ const routes = [
       { path: 'reserve', component: AdminReserve},
       { path: 'reservations', component: AdminReservations},
       { path: 'chapels', component: AdminChapels},
+      { path: 'transactions', component: AdminTransactions},
+      { path: 'account', component: AdminAccount}
     ]
   }
 ]
