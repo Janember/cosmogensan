@@ -51,6 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'phone' => $_POST['phone'],
         'idPath' => $uploadedFile,
         'price' => $_POST['price'],
+        'rem_balance' => $_POST['price'],
         'size' => $_POST['size']
     ];
 
@@ -58,11 +59,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt = $pdo->prepare("INSERT INTO reservations (
             user_id, deceased_name, start_date, end_date, casket_id, chapel_id, color,
             additional_features, additional_instructions, city, barangay, street, house_no,
-            user_name, email, phone, id_uploaded_path, price, size, status
+            user_name, email, phone, id_uploaded_path, price, size, rem_balance, status
         ) VALUES (
             :user_id, :deceasedName, :startDate, :endDate, :casketID, :chapelID, :color,
             :additionalFeatures, :instructions, :city, :barangay, :street, :houseNo,
-            :userName, :email, :phone, :idPath, :price, :size, 'approved'
+            :userName, :email, :phone, :idPath, :price, :size, :rem_balance, 'approved'
         )");
 
         $stmt->execute($data);

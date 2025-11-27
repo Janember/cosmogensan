@@ -12,25 +12,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!isset($data['item'])) {
-    http_response_code(400);
-    echo json_encode(['error' => 'Item data missing']);
-    exit;
-}
-
-$item = $data['item'];
-
-$amount = intval($item['price'] * 100 * 0.5);
-$name = $item['user_name'];
+$reservation_id = $data['reservation_id'];
+$user_id = $data['user_id'];
+$rem_balance = $data['rem_balance'];
+$payment_type = $data['payment_type'];
+$name = $data['user_name'];
 
 try {
-    // 🔹 Check if a transaction already exists for this reservation
-    $stmt = $pdo->prepare("SELECT id, checkout_url FROM transactions WHERE reservation_id = ? LIMIT 1");
-    $stmt->execute([$item['id']]);
+    $stmt = $pdo->prepare("SELECT id, checkout_url, type FROM transactions WHERE reservation_id = ? AND type = ? LIMIT 1");
+    $stmt->execute([$reservation_id, $payment_type]);
     $existingTransaction = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($existingTransaction) {
-        // Return existing transaction without creating a new one
+    if ($existingTransaction && !empty($existingTransaction['checkout_url'])) {
         echo json_encode([
             'checkout_url' => $existingTransaction['checkout_url'],
             'transaction_id' => $existingTransaction['id']
@@ -38,8 +31,12 @@ try {
         exit;
     }
 
-    // 🔹 If no transaction exists, create a new checkout session
+    $description = $payment_type === 'down'
+    ? '50% Downpayment for chapel and casket reservation'
+    : 'Remaining 50% Payment for full settlement of chapel and casket reservation';
+
     $client = new \GuzzleHttp\Client();
+    
     $response = $client->request('POST', 'https://api.paymongo.com/v1/checkout_sessions', [
         'body' => json_encode([
             'data' => [
@@ -50,16 +47,16 @@ try {
                     'line_items' => [
                         [
                             'currency' => 'PHP',
-                            'amount' => $amount,
+                            'amount' => $rem_balance * 100,
                             'name' => 'Chapel and Casket Reservation',
                             'quantity' => 1
                         ]
                     ],
                     'payment_method_types' => ['gcash','card','grab_pay','paymaya'],
-                    'description' => "50% Downpayment for chapel and casket reservation",
+                    'description' => $description,
                     'metadata' => [
-                        'reservation_id' => $item['id'],
-                        'user_id' => $item['user_id']
+                        'reservation_id' => $reservation_id,
+                        'user_id' => $user_id
                     ]
                 ]
             ]
@@ -77,15 +74,29 @@ try {
     $checkoutUrl = $body['data']['attributes']['checkout_url'] ?? null;
 
     if ($transactionId && $checkoutUrl) {
-        $stmt = $pdo->prepare("INSERT INTO transactions (id, reservation_id, user_id, amount, status, checkout_url) 
-                               VALUES (?, ?, ?, ?, 'unpaid', ?)");
-        $stmt->execute([
-            $transactionId,
-            $item['id'],
-            $item['user_id'],
-            $amount * 0.01,
-            $checkoutUrl
-        ]);
+        if ($existingTransaction['type'] !== 'full'){
+            $stmt = $pdo->prepare("INSERT INTO transactions (id, type, reservation_id, user_id, amount, status, checkout_url) 
+                                VALUES (?, ?, ?, ?, ?, 'unpaid', ?)");
+            $stmt->execute([
+                $transactionId,
+                $payment_type,
+                $reservation_id,
+                $user_id,
+                $rem_balance,
+                $checkoutUrl
+            ]);
+        }
+        else {
+            $stmt = $pdo->prepare("UPDATE transactions 
+                                SET id = ?, checkout_url = ? 
+                                WHERE reservation_id = ? AND type = ?");
+            $stmt->execute([
+                $transactionId,
+                $checkoutUrl,
+                $reservation_id,
+                $payment_type
+            ]);
+        }
     }
 
     echo json_encode([

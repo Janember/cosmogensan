@@ -17,9 +17,10 @@
             <a
               href="#"
               @click.prevent="showReservationDetails(item)"
-              class="text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150"
+              class="flex items-center text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150 gap-1"
             >
-              {{ item.id }}
+              <Eye class="w-4 h-4" />
+              <span>RES-{{ item.id }}</span>
             </a>
           </td>
         </template>
@@ -49,6 +50,18 @@
                 <div class="loader"></div>
               </div>
               <div v-else>Pay Balance</div>
+            </v-btn>
+          </td>
+          <td>
+            <v-btn
+              color="blue"
+              @click="processPayment(item)"
+              v-if="item.transaction_status === 'unpaid' && item.type === 'full'"
+            >
+              <div v-if="loading" class="spinner">
+                <div class="loader"></div>
+              </div>
+              <div v-else>Pay full</div>
             </v-btn>
           </td>
         </template>
@@ -218,30 +231,34 @@
         </div>
       </div>
     </div>
-    <div class="flex items-center justify-between bg-muted/50 rounded-lg !p-4">
-      <div>
-        <div class="text-xs text-muted-foreground">
-          Total Price
+    <div class="flex flex-col gap-4 bg-muted/50 rounded-lg !p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <div class="text-xs text-muted-foreground">Total Price</div>
+            <div class="mt-0.5 text-xl">
+              ₱{{ convertToNumber(selectedReservation.price) }}
+            </div>
+          </div>
+          <div class="text-right">
+            <div class="text-xs text-muted-foreground mb-1.5">Status</div>
+            <span
+              data-slot="badge"
+              class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium w-fit gap-1 transition"
+              :class="selectedReservation.status === 'approved' 
+                ? 'bg-green-600 text-green-50' 
+                : 'bg-blue-600 text-blue-50'"
+            >
+              {{ selectedReservation.status }}
+            </span>
+          </div>
         </div>
-        <div class="mt-0.5 text-xl">
-          ₱{{ convertToNumber(selectedReservation.price) }}
+        <div class="flex items-center justify-between border-t border-gray-200 pt-3">
+          <div class="text-xs text-muted-foreground">Remaining Balance</div>
+          <div class="text-lg font-semibold text-gray-800">
+            ₱{{ convertToNumber(selectedReservation.rem_balance) }}
+          </div>
         </div>
       </div>
-      <div class="text-right">
-        <div class="text-xs text-muted-foreground mb-1.5">
-          Status
-        </div>
-        <span
-          data-slot="badge"
-          class="inline-flex items-center justify-center rounded-md px-2 py-0.5 text-xs font-medium w-fit gap-1 transition"
-          :class="selectedReservation.status === 'approved' 
-            ? 'bg-green-600 text-green-50' 
-            : 'bg-blue-600 text-blue-50'"
-        >
-          {{ selectedReservation.status }}
-        </span>
-      </div>
-    </div>
       <v-card-actions>
         <v-spacer />
         <v-btn color="primary" @click="detailsDialog = false">
@@ -256,20 +273,23 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import { convertToNumber } from "../../../composables/globalfuncs";
+import { Eye } from "lucide-vue-next";
 
 const selectedReservation = ref(null);
 const detailsDialog = ref(false);
 const headers = ref([
   { title: "Reservation ID", align: "start", key: "id", value: "id" },
   { title: "Transaction ID", value: "transaction_id" },
-  { title: "Price", value: "price" },
+  { title: "Price", value: "amount" },
   { title: "Status", value: "status" },
+  { title: "Type", value: "type" },
   { title: "Actions", value: "actions", width: "150px" },
 ]);
 const reservations = ref([]);
 const loading = ref(false);
 const pollingInterval = 5000;
-let transactionId = '';
+let resId = '';
+let type = '';
 let poller = null;
 
 const fetchReservations = async () => {
@@ -308,27 +328,42 @@ const showReservationDetails = (reservation) => {
 const processPayment = async (item) => {
   loading.value = true;
   try {
+    const remBalance = item.payment_type === 'down' 
+      ? item.rem_balance / 2
+      : item.rem_balance;
+    console.log(item.payment_type);
     const res = await fetch(`${import.meta.env.VITE_API_URL}/createCheckoutSession.php`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ item })
+      body: JSON.stringify({
+        reservation_id: item.id,
+        user_id: item.user_id,
+        rem_balance: remBalance,
+        payment_type: item.payment_type,
+        user_name: item.user_name,
+      })
     });
     
     const data = await res.json();
-    transactionId = data.transaction_id;
+
+    resId = item.id
+    type = item.type;
+
     if (data.checkout_url) {
       window.open(data.checkout_url, '_blank');
+    } else {
+      console.error("No checkout URL returned:", data);
     }
   } catch (error) {
     console.error("Payment Failed:", error);
   } finally {
-    loading.value = false; 
+    loading.value = false;
   }
 };
 
 const checkPaymentStatus = async () => {
   try {
-    const res = await fetch(`${import.meta.env.VITE_API_URL}/checkPaymentStatus.php?id=${transactionId}`);
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/checkPaymentStatus.php?id=${resId}&type=${type}`);
     const data = await res.json();
 
     if (data.status === 'paid') {

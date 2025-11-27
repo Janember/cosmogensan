@@ -148,9 +148,15 @@
     
             <button 
               type="submit" 
-              class="w-full bg-black !important text-white py-2 rounded-lg hover:bg-blue-700 transition"
+              class="w-full bg-black text-white py-2 rounded-lg hover:bg-blue-700 transition 
+                    flex items-center justify-center gap-2 disabled:opacity-70"
+              :disabled="loading"
             >
-              Register
+              <Loader2
+                v-if="loading"
+                class="animate-spin h-5 w-5 text-white"
+              />
+              <span v-if="!loading">Register</span>
             </button>
 
             <v-alert v-if="error" type="error" class="mt-4 mx-2" dense>
@@ -172,7 +178,7 @@
 import { ref, computed } from "vue";
 import { useRouter } from "vue-router";
 import axios from "axios";
-import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, User, UserStar, Users, Phone } from 'lucide-vue-next';
+import { EyeIcon, EyeOffIcon, LockIcon, MailIcon, User, UserStar, Users, Phone, Loader2 } from 'lucide-vue-next';
 
 const username = ref("");
 const firstname = ref("");
@@ -181,6 +187,7 @@ const email = ref("");
 const password = ref("");
 const confirmPassword = ref("");
 const error = ref("");
+const loading = ref(false);
 const router = useRouter();
 const showPassword = ref(false);
 const showConfirmPassword = ref(false);
@@ -207,6 +214,9 @@ const handleRegister = async () => {
     return;
   }
 
+  loading.value = true;
+  error.value = "";
+
   try {
     const response = await axios.post(
       `${import.meta.env.VITE_API_URL}/register.php`,
@@ -220,14 +230,16 @@ const handleRegister = async () => {
         confirm_password: confirmPassword.value,
       }
     );
+    console.log(response.data)
     if (response.data.success) {
-      router.push({ path: "/login", query: { registered: "true" } });
+      router.push({ path: "/login", query: { registered: "true", msg: "registered"} });
     } else {
-      console.log(response.data);
       error.value = response.data.message || "Registration failed";
     }
   } catch (err) {
     error.value = "Could not connect to the server";
+  } finally {
+    loading.value = false;
   }
 };
 

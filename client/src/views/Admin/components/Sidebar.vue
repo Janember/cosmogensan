@@ -31,23 +31,30 @@
           </span>
         </button>
       </nav>
-      <!-- Spacer and Logout Button -->
-      <!-- <hr class="mx-4 my-4 border-gray-200" />
+      
+      <hr class="mx-4 my-4 border-gray-200" />
 
       <div class="px-4 space-y-2 text-sm">
-        <button class="w-full flex items-center space-x-3 px-3 py-2 mb-2 hover:!bg-gray-100 rounded-md">
+        <button 
+          :class="currentSection === '/Admin/notifications' ? 'bg-black text-white' : 'hover:!bg-gray-100'"
+          class="w-full flex items-center space-x-3 px-3 py-2 mb-2 rounded-md"
+          @click="handleSectionChange('/Admin/notifications')"
+        >
           <icons.Bell class="mr-3 h-5 w-5" />
           <span>Notifications</span>
-          <span class="ml-auto text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">2</span>
+          <span v-if="unreadCount > 0"
+                class="ml-auto text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
         </button>
-        <button
+        <!-- <button
           class="w-full flex items-center space-x-3 px-3 py-2 hover:!bg-gray-100 rounded-md"
           @click="handleSectionChange('')"
         >
           <icons.Settings class="mr-3 h-5 w-5" />
           <span>Settings</span>
-        </button>
-      </div> -->
+        </button> -->
+      </div>
 
       <hr class="mx-4 my-4 border-gray-200" />
 
@@ -55,7 +62,7 @@
         <div class="flex items-center space-x-3 !p-3 !mb-2 rounded-lg bg-gray-50">
           <img
             :src="profile_picture"
-            alt="Profile placeholder"
+            alt="PP"
             class="w-10 h-10 mr-3 rounded-full object-cover"
           />
           <div class="flex-1">
@@ -72,20 +79,12 @@
           <span>Logout</span>
         </button>
       </div>
-
-      <!-- <v-list density="compact" nav>
-        <v-list-item
-          prepend-icon="mdi-logout"
-          title="Logout"
-          @click="handleLogout"
-        ></v-list-item>
-      </v-list> -->
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LayoutDashboard,
@@ -98,7 +97,8 @@ import {
   Menu,
   X,
   Bell,
-  Settings
+  Settings,
+  MapPin
 } from 'lucide-vue-next'
 
 const router = useRouter()
@@ -107,6 +107,13 @@ const username = ref('')
 const email = ref('')
 const profile_picture = ref('')
 const imageBaseUrl = import.meta.env.VITE_IMAGE_URL
+const unreadCount = ref(0);
+const lastUnread = ref(0);
+const role = 'admin';
+const user_id = JSON.parse(localStorage.getItem("user")).id;
+let interval;
+
+const notificationSound = new Audio('/sounds/notification.mp3'); 
 
 const icons = {
   LogOut,
@@ -122,6 +129,10 @@ const props = defineProps({
   onLogout: { type: Function, required: true }
 })
 
+onBeforeUnmount(() => {
+  clearInterval(interval);
+});
+
 onMounted(() => {
   user.value = JSON.parse(localStorage.getItem('user'))
   username.value = user ? user.value.username : 'Default User'
@@ -129,6 +140,8 @@ onMounted(() => {
   profile_picture.value = user.value.profile_picture
   ? `${imageBaseUrl}/uploads/profile_pictures/${user.value.profile_picture}`
   : `${imageBaseUrl}/uploads/profile_pictures/profilepicture.png`
+  fetchUnreadCount();
+  interval = setInterval(fetchUnreadCount, 15000);
 })
 
 const handleLogout = () => {
@@ -149,13 +162,6 @@ const navigationItems = [
     destination: '/Admin/dashboard'
   },
   {
-    id: 'chapels',
-    label: 'Chapels',
-    icon: Church,
-    description: 'Change chapel status',
-    destination: '/Admin/chapels'
-  },
-  {
     id: 'reserve-chapel',
     label: 'Reserve Chapel',
     icon: Calendar,
@@ -168,6 +174,20 @@ const navigationItems = [
     icon: CalendarCheck,
     description: 'Manage bookings',
     destination: '/Admin/reservations'
+  },
+  {
+    id: 'chapels',
+    label: 'Chapel Management',
+    icon: Church,
+    description: 'Manage Chapel Details',
+    destination: '/Admin/chapels'
+  },
+  {
+    id: 'citypricing',
+    label: 'City Pricing',
+    icon: MapPin,
+    description: 'Location-based rates',
+    destination: '/Admin/citypricing'
   },
   {
     id: 'transactions',
@@ -189,4 +209,28 @@ const handleSectionChange = (itemDestination) => {
   props.onSectionChange(itemDestination);
   router.push(itemDestination);
 }
+
+const fetchUnreadCount = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/getNotifications.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, user_id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const count = data.notifications.filter(n => !n.is_read).length;
+
+      // Play sound if new notifications arrived
+      if (count > lastUnread.value) {
+        notificationSound.play().catch(() => {}); // ignore play errors
+      }
+
+      unreadCount.value = count;
+      lastUnread.value = count;
+    }
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+  }
+};
 </script>

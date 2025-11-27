@@ -209,6 +209,7 @@ const formatDate = (dateStr) => {
 }
 
 onMounted(() => {
+  console.log(260000*0.8)
   fetchDashboardStats()
   fetchReservations()
 });

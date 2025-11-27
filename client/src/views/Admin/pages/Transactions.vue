@@ -17,9 +17,10 @@
             <a
               href="#"
               @click.prevent="showReservationDetails(item)"
-              class="text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150"
+              class="flex items-center text-blue-600 hover:text-blue-800 underline hover:underline-offset-2 transition duration-150 gap-1"
             >
-              {{ item.reservation_id }}
+              <Eye class="w-4 h-4" />
+              <span>RES-{{ item.reservation_id }}</span>
             </a>
           </td>
         </template>
@@ -87,7 +88,7 @@
                   Reservation ID
                 </div>
                 <div class="mt-0.5">
-                  {{ selectedReservation.id }}
+                  {{ selectedReservation.reservation_id }}
                 </div>
               </div>
               <div>
@@ -257,12 +258,14 @@
 import { ref, computed, onMounted, onUnmounted } from "vue";
 import axios from "axios";
 import { convertToNumber } from "../../../composables/globalfuncs";
+import { Eye } from 'lucide-vue-next';
 
 const selectedReservation = ref(null);
 const detailsDialog = ref(false);
 const headers = ref([
   { title: "Reservation ID", value: "reservation_id" },
   { title: "Transaction ID", value: "transaction_id" },
+  { title: "Name", value: "user_name" },
   { title: "Price", value: "price" },
   { title: "Status", value: "status" },
   { title: "Actions", value: "actions", width: "150px" },

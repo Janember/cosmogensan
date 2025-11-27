@@ -160,7 +160,7 @@
         <v-col cols="12">
           <h3 class="text-2xl font-semibold">
             Total Price: ₱{{
-              convertToNumber((Number(state.casketSelect?.casketPrice) || 0) + (Number(state.address?.addressPrice) || 0))
+              convertToNumber((Number(state.casketSelect?.casketPrice) || 0) + (Number(state.address?.addressPrice) || 0) + (Number(tempCasket.addOns.length * 1000)))
             }}
           </h3>
 
@@ -170,6 +170,10 @@
 
           <div v-if="state.address" class="mt-2 text-caption">
             <strong>Address: </strong>{{ state.address.city }} - ₱{{ convertToNumber(state.address.addressPrice)}}
+          </div>
+
+          <div v-if="tempCasket.addOns" class="mt-2 text-caption">
+            <strong>Additional Features: </strong>{{ tempCasket.addOns }} - ₱{{ convertToNumber(tempCasket.addOns.length * 1000)}}
           </div>
         </v-col>
 
@@ -293,20 +297,60 @@
             </v-btn>
           </v-col>
           <v-col cols="12" sm="4">
-            <v-autocomplete
+            <v-combobox
               v-model="tempCasket.addOns"
               :items="addOns"
               label="Additional Features"
               multiple
               chips
-            ></v-autocomplete>
+              hide-selected
+              small-chips
+              allow-new
+              clearable
+            >
+              <template v-slot:selection="{ item, index }">
+                <v-chip :key="index" close @click:close="removeAddOn(index)">
+                  {{ item }}
+                </v-chip>
+              </template>
+            </v-combobox>
           </v-col>
           <v-col cols="12" sm="4">
             <v-select
               v-model="tempCasket.size"
               :items="casketSizes"
+              item-title="name"
+              item-value="name"
               label="Casket Size*"
-            ></v-select>
+              class="text-center"
+              hide-details
+            >
+              <!-- Custom dropdown list items -->
+              <template v-slot:item="{ props, item }">
+                <v-list-item v-bind="props" class="py-2">
+                  <div class="flex flex-col items-center text-center w-full">
+                    <span class="text-xs text-gray-600">{{ item.raw?.size || '' }}</span>
+                  </div>
+                </v-list-item>
+              </template>
+
+              <!-- Custom selected display -->
+              <template v-slot:selection="{ item }">
+                <div class="flex flex-col items-center text-center w-full">
+                  <span class="text-base font-medium text-gray-800">{{ item.raw?.name || item.name }}</span>
+                </div>
+              </template>
+            </v-select>
+
+            <!-- Show input if custom is selected -->
+            <v-text-field
+              v-if="tempCasket.size === 'Custom'"
+              v-model="tempCasket.customSize"
+              label="Enter custom size"
+              dense
+              outlined
+              class="mt-2 text-center"
+            ></v-text-field>
           </v-col>
           <!-- <v-col cols="12" class="d-flex justify-center">
             <v-img
@@ -330,6 +374,18 @@
               </v-card>
             </v-dialog>
           </v-col> -->
+        
+          <model-viewer
+            v-if="tempCasket.color"
+            id="casketViewer"
+            ref="viewer"
+            src="/models/casket.glb"
+            background-color="#f5f5f5"
+            camera-controls
+            class="mb-6"
+            style="width: 100%; height: 300px; border-radius: 12px; background: gray; box-shadow: 0 4px 12px rgba(0,0,0,0.2);"
+            @load="() => applyColor(customColor)"
+          />
           <v-col cols="12">
             <v-textarea
               v-model="tempCasket.additionalInstructions"
@@ -386,7 +442,8 @@
               class="d-flex justify-center"
             >
               <v-btn
-                :style="{ backgroundColor: preset.color, color: '#fff' }"
+                class="!bg-[var(--dynamic-bg)]"
+                :style="{ '--dynamic-bg': preset.color }"
                 block
                 @click="applyColor(preset.color)"
               >
@@ -436,21 +493,21 @@
               @click="selectChapel(chapel)"
             >
               <v-img
-                :src="getChapelImage(chapel.image)"
+                :src="getChapelImageUrl(chapel)"
                 height="180"
                 cover
                 class="rounded-t"
               ></v-img>
               <v-card-title class="text-h6">{{ chapel.name }}</v-card-title>
               <v-card-text class="text-body-2">
-                <p><strong>Capacity:</strong> {{ chapel.capacity }}</p>
+                <p><strong>Capacity:</strong> {{ chapel.capacity }} People</p>
                 <ul class="ml-3 mt-2">
-                  <li v-for="(feature, i) in chapel.features" :key="i">
-                    • {{ feature }}
-                  </li>
+                  <div class="text-gray-700 text-sm text-left mb-4" style="white-space: pre-line;">
+                    {{ chapel.description }}
+                  </div>
                 </ul>
                 <p class="mt-2">
-                  <strong>Duration:</strong> {{ chapel.duration }}
+                  <strong>Duration:</strong> 3-5 Days
                 </p>
                 <p>
                   <strong>Status:</strong>
@@ -634,27 +691,19 @@ const fetchCasketTypes = async () => {
 const fetchChapelsByCasketType = async (casketType) => {
   fetchCasketPrice();
   try {
-    const res = await fetch(
+    const response = await axios.get(
       `${import.meta.env.VITE_API_URL}/getChapels.php?name=${casketType}`
     );
-    const data = await res.json();
-
-    if (data.success) {
-      chapels.value = data.data.map((chapel) => ({
-        id: chapel.id,
-        name: chapel.name,
-        image: chapel.image,
-        capacity: "50 People",
-        features: [
-          "Fully air-conditioned chapel",
-          "Water dispenser",
-          "24/7 security and staff assistance",
-        ],
-        duration: "3-5 days",
-        status: chapel.status,
+    if (response.data.success) {
+      console.log(response)
+      chapels.value = response.data.data.map((chapel) => ({
+        ...chapel,
+        previewImage: chapel.image
+          ? `${import.meta.env.VITE_IMAGE_URL}/chapels/${chapel.image}`
+          : "",
       }));
     } else {
-      console.error("Error fetching chapels:", data.message);
+      console.error("Error fetching chapels:", response.data.message);
     }
   } catch (err) {
     console.error("Fetch error:", err);
@@ -778,6 +827,7 @@ const tempCasket = reactive({
   engraving: "",
   addOns: [],
   size: "",
+  customSize: "",
   casketPrice: null,
 });
 
@@ -921,9 +971,10 @@ const fetchChapelID = async () => {
 };
 
 const casketSizes = [
-  "Small",
-  "Medium",
-  "Large"
+  { name: "Junior", size: "(169 cm length x 55 cm width)"},
+  { name: "Standard", size: "(180 cm length x 60 cm width)"},
+  { name: "Oversized", size: "(213 cm length x 71 cm width)"},
+  { name: "Custom" }
 ];
 
 const addOns = [
@@ -940,6 +991,17 @@ const presetColors = [
   { color: "#d4af37" },
   { color: "#1a2a6c" }
 ];
+
+
+
+const getChapelImageUrl = (chapel) => {
+  console.log(chapel.image)
+  return chapel.previewImage 
+    ? chapel.previewImage 
+    : chapel.image 
+      ? `${import.meta.env.VITE_IMAGE_URL}/chapels/${chapel.image}`
+      : null
+}
 
 const getChapelImage = (imageName) => {
   return new URL(`../../../assets/chapels/${imageName}`, import.meta.url).href;
@@ -1073,8 +1135,8 @@ async function submitForm() {
     email: state.email,
     phone: state.phone,
     idUploaded: state.discountIdFile,
-    price: Number(state.casketSelect.casketPrice) + Number(state.address.addressPrice),
-    size: tempCasket.size,
+    price: Number(state.casketSelect.casketPrice) + Number(state.address.addressPrice) + Number(tempCasket.addOns.length * 1000),
+    size: tempCasket.customSize ? tempCasket.customSize : tempCasket.size,
   });
 
   for (const key in form) {
@@ -1089,6 +1151,27 @@ async function submitForm() {
 
     const result = await response.json();
     if (result.success) {
+
+      const notifPayload = {
+        title: "New Reservation Submitted",
+        message: `${state.contactName} just made a reservation from ${state.reservationStart} to ${state.reservationEnd}.`,
+        type: "role",
+        role_target: "admin",
+      };
+
+      await fetch(`${import.meta.env.VITE_API_URL}/createNotification.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifPayload),
+      });
+
+      notifPayload.role_target = "staff";
+      await fetch(`${import.meta.env.VITE_API_URL}/createNotification.php`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(notifPayload),
+      });
+
       state.successDialog = true;
     } else {
       alert("Something went wrong!");

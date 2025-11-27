@@ -31,23 +31,29 @@
           </span>
         </button>
       </nav>
-      <!-- Spacer and Logout Button -->
-      <!-- <hr class="mx-4 my-4 border-gray-200" />
+      <hr class="mx-4 my-4 border-gray-200" />
 
       <div class="px-4 space-y-2 text-sm">
-        <button class="w-full flex items-center space-x-3 px-3 py-2 mb-2 hover:!bg-gray-100 rounded-md">
+        <button 
+          :class="currentSection === '/Staff/notifications' ? 'bg-black text-white' : 'hover:!bg-gray-100'"
+          class="w-full flex items-center space-x-3 px-3 py-2 mb-2 rounded-md"
+          @click="handleSectionChange('/Staff/notifications')"
+        >
           <icons.Bell class="mr-3 h-5 w-5" />
           <span>Notifications</span>
-          <span class="ml-auto text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">2</span>
+          <span v-if="unreadCount > 0"
+                class="ml-auto text-xs bg-red-200 text-red-700 px-2 py-0.5 rounded-full">
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
         </button>
-        <button
+        <!-- <button
           class="w-full flex items-center space-x-3 px-3 py-2 hover:!bg-gray-100 rounded-md"
           @click="handleSectionChange('')"
         >
           <icons.Settings class="mr-3 h-5 w-5" />
           <span>Settings</span>
-        </button>
-      </div> -->
+        </button> -->
+      </div>
 
       <hr class="mx-4 my-4 border-gray-200" />
 
@@ -85,7 +91,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import {
   LayoutDashboard,
@@ -107,6 +113,13 @@ const username = ref('')
 const email = ref('')
 const profile_picture = ref('')
 const imageBaseUrl = import.meta.env.VITE_IMAGE_URL
+const unreadCount = ref(0);
+const lastUnread = ref(0);
+const role = 'staff';
+const user_id = JSON.parse(localStorage.getItem("user")).id;
+let interval;
+
+const notificationSound = new Audio('/sounds/notification.mp3'); 
 
 const icons = {
   LogOut,
@@ -122,6 +135,10 @@ const props = defineProps({
   onLogout: { type: Function, required: true }
 })
 
+onBeforeUnmount(() => {
+  clearInterval(interval);
+});
+
 onMounted(() => {
   user.value = JSON.parse(localStorage.getItem('user'))
   username.value = user ? user.value.username : 'Default User'
@@ -129,6 +146,8 @@ onMounted(() => {
   profile_picture.value = user.value.profile_picture
   ? `${imageBaseUrl}/uploads/profile_pictures/${user.value.profile_picture}`
   : `${imageBaseUrl}/uploads/profile_pictures/profilepicture.png`
+  fetchUnreadCount();
+  interval = setInterval(fetchUnreadCount, 15000);
 })
 
 const handleLogout = () => {
@@ -189,4 +208,29 @@ const handleSectionChange = (itemDestination) => {
   props.onSectionChange(itemDestination);
   router.push(itemDestination);
 }
+
+const fetchUnreadCount = async () => {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_URL}/getNotifications.php`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ role, user_id })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // count unread notifications
+      const count = data.notifications.filter(n => !n.is_read).length;
+
+      // Play sound if new notifications arrived
+      if (count > lastUnread.value) {
+        notificationSound.play().catch(() => {}); // ignore play errors
+      }
+
+      unreadCount.value = count;
+      lastUnread.value = count;
+    }
+  } catch (err) {
+    console.error('Error fetching notifications:', err);
+  }
+};
 </script>

@@ -26,7 +26,7 @@ try {
     $casket_id = $casket['id'];
 
     $stmt = $pdo->prepare("
-        SELECT chapels.name, chapels.image, chapels.status, chapels.id
+        SELECT *
         FROM chapels
         JOIN casket_chapels ON chapels.id = casket_chapels.chapel_id
         WHERE casket_chapels.casket_id = :casket_id
@@ -34,22 +34,8 @@ try {
     $stmt->execute(['casket_id' => $casket_id]);
     $chapels = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    $chapelList = array_map(function ($chapel) {
-        return [
-            'name' => $chapel['name'],
-            'image' => $chapel['image'],
-            'capacity' => '50 People',  
-            'features' => [
-                'Fully air-conditioned chapel',
-                'Water dispenser',
-                '24/7 security and staff assistance',
-            ],
-            'status' => $chapel['status'],
-        ];
-    }, $chapels);
-
     // Return the formatted chapel data
-    echo json_encode(['success' => true, 'data' => $chapelList]);
+    echo json_encode(['success' => true, 'data' => $chapels]);
 } catch (PDOException $e) {
     http_response_code(500);
     echo json_encode(['success' => false, 'message' => 'Query failed: ' . $e->getMessage()]);

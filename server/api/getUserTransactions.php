@@ -15,7 +15,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $sql = "
         SELECT r.*,
                t.id AS transaction_id,
-               t.amount
+               t.type,
+               t.amount,
+               t.status AS transaction_status
         FROM reservations r
         LEFT JOIN transactions t ON r.id = t.reservation_id
         WHERE r.user_id = :user_id

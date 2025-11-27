@@ -10,7 +10,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 include('../config/db_connect.php');
 
-// Get JSON input
 $data = json_decode(file_get_contents('php://input'), true);
 
 if (
@@ -25,10 +24,8 @@ if (
     $status = $data['status'];
 
     try {
-        // Start transaction
         $pdo->beginTransaction();
 
-        // Insert into transactions table
         $insertTransaction = "INSERT INTO transactions (reservation_id, user_id, amount_paid) 
                               VALUES (:reservation_id, :user_id, :amount_paid)";
         $stmt1 = $pdo->prepare($insertTransaction);

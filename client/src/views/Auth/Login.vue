@@ -23,12 +23,18 @@
         </div>
 
         <v-alert
-          v-if="route.query.registered === 'true'"
-          type="success"
+          v-if="message"
           dense
-          class="mx-4 mb-4"
+          :class="[
+           'p-3 mx-4 mb-4 rounded-lg text-white text-center',
+           message === 'verified' ? '!bg-green-500' :
+           message === 'invalid' ? '!bg-red-300' :
+           message === 'reset-success' ? '!bg-green-500' :
+           message === 'registered' ? '!bg-green-500' :
+           'bg-gray-500'
+         ]"
         >
-          Registration successful! You may now log in.
+          {{ displayMessage }}
         </v-alert>
 
 
@@ -84,7 +90,12 @@
               <input type="checkbox" id="remember" class="mr-2 rounded border-gray-300" />
               <span>Remember me</span>
             </label>
-            <a href="#" class="text-black-600 hover:underline">Forgot password?</a>
+            <a 
+              class="text-black-600 hover:underline"
+              @click="goToForgotPassword"
+            >
+              Forgot password?
+            </a>
           </div>
           
           <button 
@@ -119,11 +130,12 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, computed} from "vue";
 import { useRouter, useRoute } from "vue-router";
 import axios from "axios";
 import VueHcaptcha from '@hcaptcha/vue3-hcaptcha';
 import { EyeIcon, EyeOffIcon, LockIcon, MailIcon } from 'lucide-vue-next';
+import ForgotPassword from "./ForgotPassword.vue";
 
 const email = ref("");
 const password = ref("");
@@ -135,6 +147,7 @@ const router = useRouter();
 const route = useRoute();
 
 const queryParams = route.query;
+const message = route.query.msg
 
 const handleLogin = async () => {
 
@@ -192,9 +205,22 @@ const onError = () => {
   error.value = "hCaptcha failed to load. Please refresh the page.";
 };
 
+const goToForgotPassword = () => {
+  router.push("/forgotpassword");
+};
+
 const goToRegister = () => {
   router.push("/register");
 };
+
+const displayMessage = computed(() => { 
+  if (message === 'registered') return 'Registration successful! Please check your email to verify your account.'
+  if (message === 'verified') return 'Email verified! You can now log in.'
+  if (message === 'invalid') return 'Invalid or expired verification link.'
+  if (message === 'error') return 'Something went wrong. Please try again.'
+  if (message === 'reset-success') return 'Password reset successfully! You can now log in.'
+  return ''
+})
 
 const getDashboardRoute = (hierarchy) => {
   switch (hierarchy) {

@@ -16,7 +16,8 @@
     "vue-material-design-icons": "^5.3.1",
     "vue-recaptcha": "^3.0.0-alpha.2",
     "vue-router": "^4.5.0",
-    "vuetify": "^3.8.2"
+    "vuetify": "^3.8.2",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@fortawesome/fontawesome-free": "^6.7.2",
